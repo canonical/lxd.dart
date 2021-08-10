@@ -1,6 +1,6 @@
 [![Pub Package](https://img.shields.io/pub/v/lxd.svg)](https://pub.dev/packages/lxd)
 
-Provides a client to access lxd, which allows you to manage, search and install [snaps](https://snapcraft.io/) on a Linux system.
+Provides a client to access lxd, which allows you to manage containers on a Linux system.
 
 ## Example
 
