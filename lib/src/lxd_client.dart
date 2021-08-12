@@ -399,23 +399,31 @@ class LxdClient {
     var imagePaths = await _getSync('/1.0/images', parameters);
     var images = <LxdImage>[];
     for (var path in imagePaths) {
-      var image = await _getSync(path);
-      images.add(LxdImage(
-          architecture: image['architecture'],
-          autoUpdate: image['auto_update'],
-          cached: image['cached'],
-          createdAt: image['created_at'],
-          expiresAt: image['expires_at'],
-          filename: image['filename'],
-          fingerprint: image['fingerprint'],
-          lastUsedAt: image['last_used_at'],
-          profiles: image['profiles'],
-          public: image['public'],
-          size: image['size'],
-          type: image['type'],
-          uploadedAt: image['uploaded_at']));
+      images.add(await _getImage(path));
     }
     return images;
+  }
+
+  Future<LxdImage> getImage(String fingerprint) async {
+    return await _getImage('/1.0/images/$fingerprint');
+  }
+
+  Future<LxdImage> _getImage(String path) async {
+    var image = await _getSync(path);
+    return LxdImage(
+        architecture: image['architecture'],
+        autoUpdate: image['auto_update'],
+        cached: image['cached'],
+        createdAt: image['created_at'],
+        expiresAt: image['expires_at'],
+        filename: image['filename'],
+        fingerprint: image['fingerprint'],
+        lastUsedAt: image['last_used_at'],
+        profiles: image['profiles'],
+        public: image['public'],
+        size: image['size'],
+        type: image['type'],
+        uploadedAt: image['uploaded_at']);
   }
 
   Future<List<LxdInstance>> getInstances() async {
