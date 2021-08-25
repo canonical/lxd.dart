@@ -6,11 +6,11 @@ class SimplestreamProduct {
   final String architecture;
   final String os;
   final String release;
-  final String releaseCodename;
+  final String? releaseCodename;
   final String releaseTitle;
   final bool supported;
-  final DateTime supportEol;
-  final String version;
+  final DateTime? supportEol;
+  final String? version;
   final Map<String, Map<String, SimplestreamItem>> versions;
 
   SimplestreamProduct(
@@ -57,7 +57,9 @@ class SimplestreamClient {
   /// Sets the user agent sent in requests to the simple streams server.
   set userAgent(String? value) => _userAgent = value;
 
-  Future<void> getStreams() async {
+  Future<List<SimplestreamProduct>> getProducts() async {
+    var products = <SimplestreamProduct>[];
+
     var body = await _getJson('streams/v1/index.json');
     var format = body['format'];
     if (format != 'index:1.0') {
@@ -65,12 +67,12 @@ class SimplestreamClient {
     }
     var index = body['index'] as Map<String, dynamic>;
     for (var entry in index.entries) {
-      var products = entry.value as Map<String, dynamic>;
-      var format = products['format'];
+      var products_ = entry.value as Map<String, dynamic>;
+      var format = products_['format'];
       if (format != 'products:1.0') {
         throw 'Unsupported simplestream products format $format';
       }
-      var datatype = products['datatype'];
+      var datatype = products_['datatype'];
       switch (datatype) {
         case 'image-ids':
           break;
@@ -79,10 +81,15 @@ class SimplestreamClient {
         default:
           continue;
       }
+
+      var path = products_['path'];
+      products.addAll(await _getProducts(path));
     }
+
+    return products;
   }
 
-  Future<List<SimplestreamProduct>> getProducts(String path) async {
+  Future<List<SimplestreamProduct>> _getProducts(String path) async {
     var body = await _getJson(path);
     var format = body['format'];
     if (format != 'products:1.0') {
@@ -120,8 +127,10 @@ class SimplestreamClient {
               release: product['release'],
               releaseCodename: product['release_codename'],
               releaseTitle: product['release_title'],
-              supported: product['supported'],
-              supportEol: DateTime.parse(product['support_eol']),
+              supported: product['supported'] ?? true,
+              supportEol: product.containsKey('support_eol')
+                  ? DateTime.parse(product['support_eol'])
+                  : null,
               version: product['version'],
               versions: versions));
         }
