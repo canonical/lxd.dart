@@ -414,16 +414,16 @@ class LxdClient {
         architecture: image['architecture'],
         autoUpdate: image['auto_update'],
         cached: image['cached'],
-        createdAt: image['created_at'],
-        expiresAt: image['expires_at'],
+        createdAt: DateTime.parse(image['created_at']),
+        expiresAt: DateTime.parse(image['expires_at']),
         filename: image['filename'],
         fingerprint: image['fingerprint'],
-        lastUsedAt: image['last_used_at'],
-        profiles: image['profiles'],
+        lastUsedAt: DateTime.parse(image['last_used_at']),
+        profiles: image['profiles'].cast<String>(),
         public: image['public'],
         size: image['size'],
         type: image['type'],
-        uploadedAt: image['uploaded_at']);
+        uploadedAt: DateTime.parse(image['uploaded_at']));
   }
 
   Future<List<LxdInstance>> getInstances() async {
