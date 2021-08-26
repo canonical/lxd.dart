@@ -89,6 +89,10 @@ class LxdOperation {
       required this.status,
       required this.statusCode,
       required this.updatedAt});
+
+  @override
+  String toString() =>
+      'LxdOperation(createdAt: $createdAt, description: $description, error: $error, id: $id, status: $status, statusCode: $statusCode, updatedAt: $updatedAt)';
 }
 
 class LxdCpuResources {
@@ -365,20 +369,20 @@ class LxdClient {
   /// Get the current state of the operation with [id].
   Future<LxdOperation> getOperation(String id) async {
     await _connect();
-    var response = await _getSync('/1.0/operations/$id');
+    var response = await _requestSync('GET', '/1.0/operations/$id');
     return _parseOperation(response);
   }
 
   /// Wait for the operation with [id] to complete.
   Future<LxdOperation> waitOperation(String id) async {
     await _connect();
-    var response = await _getSync('/1.0/operations/$id/wait');
+    var response = await _requestSync('GET', '/1.0/operations/$id/wait');
     return _parseOperation(response);
   }
 
   Future<LxdResources> getResources() async {
     await _connect();
-    var data = await _getSync('/1.0/resources');
+    var data = await _requestSync('GET', '/1.0/resources');
     var cpuData = data['cpu'];
     var memoryData = data['memory'];
     var systemData = data['system'];
@@ -421,10 +425,10 @@ class LxdClient {
   }
 
   Future<List<LxdCertificate>> getCertificates() async {
-    var certificatePaths = await _getSync('/1.0/certificates');
+    var certificatePaths = await _requestSync('GET', '/1.0/certificates');
     var certificates = <LxdCertificate>[];
     for (var path in certificatePaths) {
-      var certificate = await _getSync(path);
+      var certificate = await _requestSync('GET', path);
       certificates.add(LxdCertificate(
           certificate: certificate['certificate'],
           fingerprint: certificate['fingerprint'],
@@ -437,10 +441,10 @@ class LxdClient {
   }
 
   Future<List<LxdProject>> getProjects() async {
-    var projectPaths = await _getSync('/1.0/projects');
+    var projectPaths = await _requestSync('GET', '/1.0/projects');
     var projects = <LxdProject>[];
     for (var path in projectPaths) {
-      var project = await _getSync(path);
+      var project = await _requestSync('GET', path);
       projects.add(LxdProject(
           config: project['config'],
           description: project['description'],
@@ -458,7 +462,7 @@ class LxdClient {
     if (filter != null) {
       parameters['filter'] = filter;
     }
-    var imagePaths = await _getSync('/1.0/images', parameters);
+    var imagePaths = await _requestSync('GET', '/1.0/images', parameters);
     var images = <LxdImage>[];
     for (var path in imagePaths) {
       images.add(await _getImage(path));
@@ -471,7 +475,7 @@ class LxdClient {
   }
 
   Future<LxdImage> _getImage(String path) async {
-    var image = await _getSync(path);
+    var image = await _requestSync('GET', path);
     return LxdImage(
         architecture: image['architecture'],
         autoUpdate: image['auto_update'],
@@ -490,10 +494,10 @@ class LxdClient {
 
   Future<List<LxdInstance>> getInstances() async {
     await _connect();
-    var instancePaths = await _getSync('/1.0/instances');
+    var instancePaths = await _requestSync('GET', '/1.0/instances');
     var instances = <LxdInstance>[];
     for (var path in instancePaths) {
-      var instance = await _getSync(path);
+      var instance = await _requestSync('GET', path);
       // FIXME: 'devices', 'expanded_config', 'expanded_devices'
       instances.add(LxdInstance(
           architecture: instance['architecture'],
@@ -536,7 +540,12 @@ class LxdClient {
     s['protocol'] = 'simplestreams';
     s['server'] = url;
     body['source'] = s;
-    return await _postAsync('/1.0/instances', body);
+    return await _requestAsync('POST', '/1.0/instances', body);
+  }
+
+  /// Deletes the instance with [name].
+  Future<LxdOperation> deleteInstance(String name) async {
+    return await _requestAsync('DELETE', '/1.0/instances/$name');
   }
 
   /// Terminates all active connections. If a client remains unclosed, the Dart process may not terminate.
@@ -545,7 +554,7 @@ class LxdClient {
   }
 
   Future<void> _connect() async {
-    hostInfo ??= await _getSync('/1.0');
+    hostInfo ??= await _requestSync('GET', '/1.0');
   }
 
   /// Get the HTTP client to communicate with lxd.
@@ -572,10 +581,10 @@ class LxdClient {
   }
 
   /// Does a synchronous request to lxd.
-  Future<dynamic> _getSync(String path,
+  Future<dynamic> _requestSync(String method, String path,
       [Map<String, String> queryParameters = const {}]) async {
     var client = await _getClient();
-    var request = Request('GET', Uri.http('localhost', path, queryParameters));
+    var request = Request(method, Uri.http('localhost', path, queryParameters));
     _setHeaders(request);
     var response = await client.send(request);
     var lxdResponse = await _parseResponse(response);
@@ -583,9 +592,10 @@ class LxdClient {
   }
 
   /// Does an asynchronous request to lxd.
-  Future<dynamic> _postAsync(String path, [dynamic body]) async {
+  Future<dynamic> _requestAsync(String method, String path,
+      [dynamic body]) async {
     var client = await _getClient();
-    var request = Request('POST', Uri.http('localhost', path));
+    var request = Request(method, Uri.http('localhost', path));
     _setHeaders(request);
     request.headers['Content-Type'] = 'application/json';
     request.bodyBytes = utf8.encode(json.encode(body));
