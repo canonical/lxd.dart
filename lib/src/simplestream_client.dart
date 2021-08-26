@@ -26,7 +26,22 @@ class SimplestreamProduct {
       required this.versions});
 }
 
-class SimplestreamItem {
+class SimplestreamItem {}
+
+class SimplestreamIdItem extends SimplestreamItem {
+  final String crsn;
+  final String id;
+  final String rootStore;
+  final String virt;
+
+  SimplestreamIdItem(
+      {required this.crsn,
+      required this.id,
+      required this.rootStore,
+      required this.virt});
+}
+
+class SimplestreamDownloadItem extends SimplestreamItem {
   final String? combinedDisk1ImgSha256;
   final String? combinedSquashfsSha256;
   final String ftype;
@@ -35,7 +50,7 @@ class SimplestreamItem {
   final String? sha256;
   final int size;
 
-  SimplestreamItem(
+  SimplestreamDownloadItem(
       {this.combinedDisk1ImgSha256,
       this.combinedSquashfsSha256,
       required this.ftype,
@@ -97,19 +112,26 @@ class SimplestreamClient {
     }
     var products = <SimplestreamProduct>[];
     var datatype = body['datatype'];
-    switch (datatype) {
-      case 'image-ids':
-        break;
-      case 'image-downloads':
-        for (var entry in body['products'].entries) {
-          var product = entry.value;
-          var versions = <String, Map<String, SimplestreamItem>>{};
-          for (var versionItem in product['versions'].entries) {
-            var version = versionItem.value;
-            var items = <String, SimplestreamItem>{};
-            for (var itemEntry in version['items'].entries) {
-              var item = itemEntry.value;
-              items[itemEntry.key] = SimplestreamItem(
+    for (var entry in body['products'].entries) {
+      var product = entry.value;
+      var versions = <String, Map<String, SimplestreamItem>>{};
+      for (var versionItem in product['versions'].entries) {
+        var version = versionItem.value;
+        var items = <String, SimplestreamItem>{};
+        for (var itemEntry in version['items'].entries) {
+          var item = itemEntry.value;
+
+          SimplestreamItem i;
+          switch (datatype) {
+            case 'image-ids':
+              i = SimplestreamIdItem(
+                  crsn: item['crsn'],
+                  id: item['id'],
+                  rootStore: item['root_store'],
+                  virt: item['virt']);
+              break;
+            case 'image-downloads':
+              i = SimplestreamDownloadItem(
                   combinedDisk1ImgSha256: item['combined_disk1-img_sha256'],
                   combinedSquashfsSha256: item['combined_squashfs_sha256'],
                   ftype: item['ftype'],
@@ -117,25 +139,30 @@ class SimplestreamClient {
                   path: item['path'],
                   sha256: item['sha256'],
                   size: item['size']);
-            }
-            versions[versionItem.key] = items;
+              break;
+            default:
+              continue;
           }
-          products.add(SimplestreamProduct(
-              aliases: product['aliases'].split(','),
-              architecture: product['arch'],
-              os: product['os'],
-              release: product['release'],
-              releaseCodename: product['release_codename'],
-              releaseTitle: product['release_title'],
-              supported: product['supported'] ?? true,
-              supportEol: product.containsKey('support_eol')
-                  ? DateTime.parse(product['support_eol'])
-                  : null,
-              version: product['version'],
-              versions: versions));
+
+          items[itemEntry.key] = i;
+          versions[versionItem.key] = items;
         }
-        break;
+      }
+      products.add(SimplestreamProduct(
+          aliases: product['aliases'].split(','),
+          architecture: product['arch'],
+          os: product['os'],
+          release: product['release'],
+          releaseCodename: product['release_codename'],
+          releaseTitle: product['release_title'],
+          supported: product['supported'] ?? true,
+          supportEol: product.containsKey('support_eol')
+              ? DateTime.parse(product['support_eol'])
+              : null,
+          version: product['version'],
+          versions: versions));
     }
+
     return products;
   }
 

@@ -39,17 +39,18 @@ Future<void> listSimpleStreamImages(String url) async {
   var products = await s.getProducts();
   for (var product in products) {
     for (var v in product.versions.values) {
-      var lxdItem = v['lxd.tar.xz'];
+      var lxdItem = v['lxd.tar.xz'] as SimplestreamDownloadItem?;
       if (lxdItem == null) {
         continue;
       }
 
-      var squashfsItem = v['squashfs'] ?? v['root.squashfs'];
+      var squashfsItem = v['squashfs'] as SimplestreamDownloadItem? ??
+          v['root.squashfs'] as SimplestreamDownloadItem?;
       if (squashfsItem != null && lxdItem.combinedSquashfsSha256 != null) {
         print(
             '${product.aliases[0]} ${lxdItem.combinedSquashfsSha256?.substring(0, 12)} ${product.releaseTitle} ${product.architecture} CONTAINER ${squashfsItem.size}');
       }
-      var disk1ImgItem = v['disk1.img'];
+      var disk1ImgItem = v['disk1.img'] as SimplestreamDownloadItem?;
       if (disk1ImgItem != null && lxdItem.combinedDisk1ImgSha256 != null) {
         print(
             '${product.aliases[0]} ${lxdItem.combinedDisk1ImgSha256?.substring(0, 12)} ${product.releaseTitle} ${product.architecture} VIRTUAL-MACHINE ${disk1ImgItem.size}');
