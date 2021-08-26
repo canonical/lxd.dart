@@ -11,14 +11,10 @@ void main() async {
     print("Can't find image");
     return;
   }
-  print('Found image!');
+  print('Creating instance...');
   var operation = await client.createInstance(
       name: 'dart-test', url: url, source: download);
-  while (operation.status == 'Running') {
-    print(operation.description);
-    operation = await client.getOperation(operation.id);
-  }
-
+  operation = await client.waitOperation(operation.id);
   if (operation.status == 'Failure') {
     print('Failed: ${operation.error}');
   }

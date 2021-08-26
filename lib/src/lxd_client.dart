@@ -362,9 +362,17 @@ class LxdClient {
   /// Sets the user agent sent in requests to lxd.
   set userAgent(String? value) => _userAgent = value;
 
+  /// Get the current state of the operation with [id].
   Future<LxdOperation> getOperation(String id) async {
     await _connect();
     var response = await _getSync('/1.0/operations/$id');
+    return _parseOperation(response);
+  }
+
+  /// Wait for the operation with [id] to complete.
+  Future<LxdOperation> waitOperation(String id) async {
+    await _connect();
+    var response = await _getSync('/1.0/operations/$id/wait');
     return _parseOperation(response);
   }
 
