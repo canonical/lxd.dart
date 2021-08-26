@@ -26,7 +26,7 @@ class SimplestreamProduct {
       required this.versions});
 }
 
-class SimplestreamItem {}
+abstract class SimplestreamItem {}
 
 class SimplestreamIdItem extends SimplestreamItem {
   final String crsn;
