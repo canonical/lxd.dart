@@ -6,6 +6,9 @@ import 'package:http/http.dart';
 import 'http_unix_client.dart';
 import 'simplestream_client.dart';
 
+const _instancePath = '/1.0/instances/';
+const _imagePath = '/1.0/images/';
+
 /// General response from lxd.
 abstract class _LxdResponse {
   /// Request result. Throws an exception if not a sync result.
@@ -460,8 +463,8 @@ class LxdClient {
     return projects;
   }
 
-  /// Gets all the images provided by the LXD server.
-  Future<List<LxdImage>> getImages({String? project, String? filter}) async {
+  /// Gets the fingerprints of the images provided by the LXD server.
+  Future<List<String>> getImages({String? project, String? filter}) async {
     await _connect();
     var parameters = <String, String>{};
     if (project != null) {
@@ -471,20 +474,18 @@ class LxdClient {
       parameters['filter'] = filter;
     }
     var imagePaths = await _requestSync('GET', '/1.0/images', parameters);
-    var images = <LxdImage>[];
+    var fingerprints = <String>[];
     for (var path in imagePaths) {
-      images.add(await _getImage(path));
+      if (path.startsWith(_imagePath)) {
+        fingerprints.add(path.substring(_imagePath.length));
+      }
     }
-    return images;
+    return fingerprints;
   }
 
   /// Gets information on an image with [fingerprint].
   Future<LxdImage> getImage(String fingerprint) async {
-    return await _getImage('/1.0/images/$fingerprint');
-  }
-
-  Future<LxdImage> _getImage(String path) async {
-    var image = await _requestSync('GET', path);
+    var image = await _requestSync('GET', '/1.0/images/$fingerprint');
     return LxdImage(
         architecture: image['architecture'],
         autoUpdate: image['auto_update'],
@@ -501,24 +502,22 @@ class LxdClient {
         uploadedAt: DateTime.parse(image['uploaded_at']));
   }
 
-  /// Gets all the instances provided by the LXD server.
-  Future<List<LxdInstance>> getInstances() async {
+  /// Gets the names of the instances provided by the LXD server.
+  Future<List<String>> getInstances() async {
     await _connect();
     var instancePaths = await _requestSync('GET', '/1.0/instances');
-    var instances = <LxdInstance>[];
+    var instanceNames = <String>[];
     for (var path in instancePaths) {
-      instances.add(await _getInstance(path));
+      if (path.startsWith(_instancePath)) {
+        instanceNames.add(path.substring(_instancePath.length));
+      }
     }
-    return instances;
+    return instanceNames;
   }
 
   /// Gets information on the instance with [name].
   Future<LxdInstance> getInstance(String name) async {
-    return await _getInstance('/1.0/instances/$name');
-  }
-
-  Future<LxdInstance> _getInstance(String path) async {
-    var instance = await _requestSync('GET', path);
+    var instance = await _requestSync('GET', '/1.0/instances/$name');
     // FIXME: 'devices', 'expanded_config', 'expanded_devices'
     return LxdInstance(
         architecture: instance['architecture'],
@@ -661,10 +660,9 @@ class LxdClient {
 
   LxdOperation _parseOperation(dynamic data) {
     var instanceNames = <String>[];
-    const instancePath = '/1.0/instances/';
     for (var path in data['resources']['instances'] ?? []) {
-      if (path.startsWith(instancePath)) {
-        instanceNames.add(path.substring(instancePath.length));
+      if (path.startsWith(_instancePath)) {
+        instanceNames.add(path.substring(_instancePath.length));
       }
     }
     return LxdOperation(
