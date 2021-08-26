@@ -1,13 +1,58 @@
 import 'package:lxd/lxd.dart';
+import 'package:lxd/src/simplestream_client.dart';
 
 void main() async {
   var client = LxdClient();
 
-  var instances = await client.getInstances();
-  print('NAME STATE TYPE');
-  for (var instance in instances) {
-    print('${instance.name} ${instance.status} ${instance.type}');
+  print('Looking for image...');
+  var url = 'https://cloud-images.ubuntu.com/releases';
+  var download = await findLxdDownload(url, 'ubuntu', architecture: 'amd64');
+  if (download == null) {
+    print("Can't find image");
+    return;
+  }
+  print('Found image!');
+  var operation = await client.createInstance(
+      name: 'dart-test', url: url, source: download);
+  while (operation.status == 'Running') {
+    print(operation.description);
+    operation = await client.getOperation(operation.id);
+  }
+
+  if (operation.status == 'Failure') {
+    print('Failed: ${operation.error}');
   }
 
   client.close();
+}
+
+Future<SimplestreamDownloadItem?> findLxdDownload(String url, String name,
+    {required String architecture}) async {
+  var s = SimplestreamClient(url);
+  var products = await s.getProducts();
+  for (var product in products) {
+    if (!product.aliases.contains(name) ||
+        product.architecture != architecture) {
+      continue;
+    }
+
+    var download = findLxdDownloadItem(product);
+    if (download != null) {
+      return download;
+    }
+  }
+
+  return null;
+}
+
+SimplestreamDownloadItem? findLxdDownloadItem(SimplestreamProduct product) {
+  var version = product.versions.values.first;
+
+  for (var v in version.values) {
+    if (v is SimplestreamDownloadItem && v.ftype == 'lxd.tar.xz') {
+      return v;
+    }
+  }
+
+  return null;
 }

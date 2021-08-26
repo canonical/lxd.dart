@@ -60,6 +60,10 @@ class SimplestreamDownloadItem extends SimplestreamItem {
       required this.path,
       this.sha256,
       required this.size});
+
+  @override
+  String toString() =>
+      'SimplestreamDownloadItem(combinedDisk1ImgSha256: $combinedDisk1ImgSha256, combinedSquashfsSha256: $combinedSquashfsSha256, ftype: $ftype, md5: $md5, path: $path, sha256: $sha256, size: $size)';
 }
 
 /// Manages a connection to the lxd server.

@@ -4,11 +4,15 @@ import 'dart:io';
 import 'package:http/http.dart';
 
 import 'http_unix_client.dart';
+import 'simplestream_client.dart';
 
 /// General response from lxd.
 abstract class _LxdResponse {
   /// Request result. Throws an exception if not a sync result.
   dynamic get result;
+
+  /// Request operation. Throws an exception if not an async result.
+  LxdOperation get operation;
 
   const _LxdResponse();
 }
@@ -24,9 +28,31 @@ class _LxdSyncResponse extends _LxdResponse {
   @override
   dynamic get result => _result;
 
+  @override
+  LxdOperation get operation => throw 'Result is sync';
+
   _LxdSyncResponse(dynamic result,
       {required this.statusCode, required this.status})
       : _result = result;
+}
+
+/// Response retuned when an async request has been started.
+class _LxdAsyncResponse extends _LxdResponse {
+  final int statusCode;
+
+  final String status;
+
+  final LxdOperation _operation;
+
+  @override
+  dynamic get result => throw 'Result is async';
+
+  @override
+  LxdOperation get operation => _operation;
+
+  _LxdAsyncResponse(LxdOperation operation,
+      {required this.statusCode, required this.status})
+      : _operation = operation;
 }
 
 /// Response retuned when an error occurred.
@@ -40,7 +66,29 @@ class _LxdErrorResponse extends _LxdResponse {
   @override
   dynamic get result => throw 'Result is error: $error';
 
+  @override
+  LxdOperation get operation => throw 'Result is error: $error';
+
   const _LxdErrorResponse({required this.errorCode, required this.error});
+}
+
+class LxdOperation {
+  final DateTime createdAt;
+  final String description;
+  final String error;
+  final String id;
+  final String status;
+  final int statusCode;
+  final DateTime updatedAt;
+
+  LxdOperation(
+      {required this.createdAt,
+      required this.description,
+      required this.error,
+      required this.id,
+      required this.status,
+      required this.statusCode,
+      required this.updatedAt});
 }
 
 class LxdCpuResources {
@@ -314,6 +362,12 @@ class LxdClient {
   /// Sets the user agent sent in requests to lxd.
   set userAgent(String? value) => _userAgent = value;
 
+  Future<LxdOperation> getOperation(String id) async {
+    await _connect();
+    var response = await _getSync('/1.0/operations/$id');
+    return _parseOperation(response);
+  }
+
   Future<LxdResources> getResources() async {
     await _connect();
     var data = await _getSync('/1.0/resources');
@@ -451,6 +505,32 @@ class LxdClient {
     return instances;
   }
 
+  Future<LxdOperation> createInstance(
+      {String? architecture,
+      String? description,
+      String? name,
+      required SimplestreamDownloadItem source,
+      required String url}) async {
+    await _connect();
+    var body = {};
+    if (architecture != null) {
+      body['architecture'] = architecture;
+    }
+    if (description != null) {
+      body['description'] = description;
+    }
+    if (name != null) {
+      body['name'] = name;
+    }
+    var s = {};
+    s['type'] = 'image';
+    s['fingerprint'] = source.combinedSquashfsSha256;
+    s['protocol'] = 'simplestreams';
+    s['server'] = url;
+    body['source'] = s;
+    return await _postAsync('/1.0/instances', body);
+  }
+
   /// Terminates all active connections. If a client remains unclosed, the Dart process may not terminate.
   void close() {
     _client?.close();
@@ -494,6 +574,18 @@ class LxdClient {
     return lxdResponse.result;
   }
 
+  /// Does an asynchronous request to lxd.
+  Future<dynamic> _postAsync(String path, [dynamic body]) async {
+    var client = await _getClient();
+    var request = Request('POST', Uri.http('localhost', path));
+    _setHeaders(request);
+    request.headers['Content-Type'] = 'application/json';
+    request.bodyBytes = utf8.encode(json.encode(body));
+    var response = await client.send(request);
+    var lxdResponse = await _parseResponse(response);
+    return lxdResponse.operation;
+  }
+
   /// Makes base HTTP headers to send.
   void _setHeaders(Request request) {
     if (_userAgent != null) {
@@ -512,6 +604,12 @@ class LxdClient {
       var status = jsonResponse['status'];
       lxdResponse = _LxdSyncResponse(jsonResponse['metadata'],
           statusCode: statusCode, status: status);
+    } else if (type == 'async') {
+      var statusCode = jsonResponse['status_code'];
+      var status = jsonResponse['status'];
+      var metadata = jsonResponse['metadata'];
+      lxdResponse = _LxdAsyncResponse(_parseOperation(metadata),
+          statusCode: statusCode, status: status);
     } else if (type == 'error') {
       var errorCode = jsonResponse['error_code'];
       var error = jsonResponse['error'];
@@ -521,5 +619,16 @@ class LxdClient {
     }
 
     return lxdResponse;
+  }
+
+  LxdOperation _parseOperation(dynamic data) {
+    return LxdOperation(
+        createdAt: DateTime.parse(data['created_at']),
+        description: data['description'],
+        error: data['err'],
+        id: data['id'],
+        status: data['status'],
+        statusCode: data['status_code'],
+        updatedAt: DateTime.parse(data['updated_at']));
   }
 }
