@@ -77,6 +77,8 @@ class LxdOperation {
   final String description;
   final String error;
   final String id;
+  final List<String> instanceNames;
+  final bool mayCancel;
   final String status;
   final int statusCode;
   final DateTime updatedAt;
@@ -84,15 +86,17 @@ class LxdOperation {
   LxdOperation(
       {required this.createdAt,
       required this.description,
-      required this.error,
+      this.error = '',
       required this.id,
+      this.instanceNames = const [],
+      this.mayCancel = false,
       required this.status,
       required this.statusCode,
       required this.updatedAt});
 
   @override
   String toString() =>
-      'LxdOperation(createdAt: $createdAt, description: $description, error: $error, id: $id, status: $status, statusCode: $statusCode, updatedAt: $updatedAt)';
+      'LxdOperation(createdAt: $createdAt, description: $description, error: $error, id: $id, instanceNames: $instanceNames, mayCancel: $mayCancel, status: $status, statusCode: $statusCode, updatedAt: $updatedAt)';
 }
 
 class LxdCpuResources {
@@ -640,11 +644,20 @@ class LxdClient {
   }
 
   LxdOperation _parseOperation(dynamic data) {
+    var instanceNames = <String>[];
+    const instancePath = '/1.0/instances/';
+    for (var path in data['resources']['instances'] ?? []) {
+      if (path.startsWith(instancePath)) {
+        instanceNames.add(path.substring(instancePath.length));
+      }
+    }
     return LxdOperation(
         createdAt: DateTime.parse(data['created_at']),
         description: data['description'],
         error: data['err'],
         id: data['id'],
+        instanceNames: instanceNames,
+        mayCancel: data['may_cancel'],
         status: data['status'],
         statusCode: data['status_code'],
         updatedAt: DateTime.parse(data['updated_at']));
