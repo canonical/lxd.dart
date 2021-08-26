@@ -48,12 +48,12 @@ Future<void> listSimpleStreamImages(String url) async {
           v['root.squashfs'] as SimplestreamDownloadItem?;
       if (squashfsItem != null && lxdItem.combinedSquashfsSha256 != null) {
         print(
-            '${product.aliases[0]} ${lxdItem.combinedSquashfsSha256?.substring(0, 12)} ${product.releaseTitle} ${product.architecture} CONTAINER ${squashfsItem.size}');
+            '${product.aliases.first} ${lxdItem.combinedSquashfsSha256?.substring(0, 12)} ${product.releaseTitle} ${product.architecture} CONTAINER ${squashfsItem.size}');
       }
       var disk1ImgItem = v['disk1.img'] as SimplestreamDownloadItem?;
       if (disk1ImgItem != null && lxdItem.combinedDisk1ImgSha256 != null) {
         print(
-            '${product.aliases[0]} ${lxdItem.combinedDisk1ImgSha256?.substring(0, 12)} ${product.releaseTitle} ${product.architecture} VIRTUAL-MACHINE ${disk1ImgItem.size}');
+            '${product.aliases.first} ${lxdItem.combinedDisk1ImgSha256?.substring(0, 12)} ${product.releaseTitle} ${product.architecture} VIRTUAL-MACHINE ${disk1ImgItem.size}');
       }
     }
   }

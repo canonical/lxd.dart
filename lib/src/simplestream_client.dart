@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 class SimplestreamProduct {
-  final List<String> aliases;
+  final Set<String> aliases;
   final String? architecture;
   final String? crsn;
   final String? os;
@@ -15,7 +15,7 @@ class SimplestreamProduct {
   final Map<String, Map<String, SimplestreamItem>> versions;
 
   SimplestreamProduct(
-      {this.aliases = const [],
+      {this.aliases = const {},
       this.architecture,
       this.crsn,
       this.os,
@@ -150,8 +150,12 @@ class SimplestreamClient {
           versions[versionItem.key] = items;
         }
       }
+      var aliases = <String>{};
+      for (var alias in (product['aliases'] ?? '').split(',')) {
+        aliases.add(alias);
+      }
       products.add(SimplestreamProduct(
-          aliases: product['aliases']?.split(',') ?? [],
+          aliases: aliases,
           architecture: product['arch'],
           crsn: product['crsn'],
           os: product['os'],
