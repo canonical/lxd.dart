@@ -3,36 +3,38 @@ import 'dart:io';
 
 class SimplestreamProduct {
   final List<String> aliases;
-  final String architecture;
-  final String os;
-  final String release;
+  final String? architecture;
+  final String? crsn;
+  final String? os;
+  final String? release;
   final String? releaseCodename;
-  final String releaseTitle;
+  final String? releaseTitle;
   final bool supported;
   final DateTime? supportEol;
   final String? version;
   final Map<String, Map<String, SimplestreamItem>> versions;
 
   SimplestreamProduct(
-      {required this.aliases,
-      required this.architecture,
-      required this.os,
-      required this.release,
-      required this.releaseCodename,
-      required this.releaseTitle,
-      required this.supported,
-      required this.supportEol,
-      required this.version,
+      {this.aliases = const [],
+      this.architecture,
+      this.crsn,
+      this.os,
+      this.release,
+      this.releaseCodename,
+      this.releaseTitle,
+      this.supported = true,
+      this.supportEol,
+      this.version,
       required this.versions});
 }
 
 abstract class SimplestreamItem {}
 
 class SimplestreamIdItem extends SimplestreamItem {
-  final String crsn;
-  final String id;
-  final String rootStore;
-  final String virt;
+  final String? crsn;
+  final String? id;
+  final String? rootStore;
+  final String? virt;
 
   SimplestreamIdItem(
       {required this.crsn,
@@ -149,8 +151,9 @@ class SimplestreamClient {
         }
       }
       products.add(SimplestreamProduct(
-          aliases: product['aliases'].split(','),
+          aliases: product['aliases']?.split(',') ?? [],
           architecture: product['arch'],
+          crsn: product['crsn'],
           os: product['os'],
           release: product['release'],
           releaseCodename: product['release_codename'],
