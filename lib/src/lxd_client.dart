@@ -384,6 +384,7 @@ class LxdClient {
     return _parseOperation(response);
   }
 
+  /// Gets system resources information.
   Future<LxdResources> getResources() async {
     await _connect();
     var data = await _requestSync('GET', '/1.0/resources');
@@ -428,6 +429,7 @@ class LxdClient {
                 version: motherboardData['version'])));
   }
 
+  /// Gets the certificates provided by the LXD server.
   Future<List<LxdCertificate>> getCertificates() async {
     var certificatePaths = await _requestSync('GET', '/1.0/certificates');
     var certificates = <LxdCertificate>[];
@@ -444,6 +446,7 @@ class LxdClient {
     return certificates;
   }
 
+  /// Gets the projects provided by the LXD server.
   Future<List<LxdProject>> getProjects() async {
     var projectPaths = await _requestSync('GET', '/1.0/projects');
     var projects = <LxdProject>[];
@@ -457,6 +460,7 @@ class LxdClient {
     return projects;
   }
 
+  /// Gets all the images provided by the LXD server.
   Future<List<LxdImage>> getImages({String? project, String? filter}) async {
     await _connect();
     var parameters = <String, String>{};
@@ -474,6 +478,7 @@ class LxdClient {
     return images;
   }
 
+  /// Gets information on an image with [fingerprint].
   Future<LxdImage> getImage(String fingerprint) async {
     return await _getImage('/1.0/images/$fingerprint');
   }
@@ -496,31 +501,42 @@ class LxdClient {
         uploadedAt: DateTime.parse(image['uploaded_at']));
   }
 
+  /// Gets all the instances provided by the LXD server.
   Future<List<LxdInstance>> getInstances() async {
     await _connect();
     var instancePaths = await _requestSync('GET', '/1.0/instances');
     var instances = <LxdInstance>[];
     for (var path in instancePaths) {
-      var instance = await _requestSync('GET', path);
-      // FIXME: 'devices', 'expanded_config', 'expanded_devices'
-      instances.add(LxdInstance(
-          architecture: instance['architecture'],
-          config: instance['config'],
-          createdAt: DateTime.parse(instance['created_at']),
-          description: instance['description'],
-          ephemeral: instance['ephemeral'],
-          lastUsedAt: DateTime.parse(instance['last_used_at']),
-          location: instance['location'],
-          name: instance['name'],
-          profiles: instance['profiles'].cast<String>(),
-          stateful: instance['stateful'],
-          status: instance['status'],
-          statusCode: instance['status_code'],
-          type: instance['type']));
+      instances.add(await _getInstance(path));
     }
     return instances;
   }
 
+  /// Gets information on the instance with [name].
+  Future<LxdInstance> getInstance(String name) async {
+    return await _getInstance('/1.0/instances/$name');
+  }
+
+  Future<LxdInstance> _getInstance(String path) async {
+    var instance = await _requestSync('GET', path);
+    // FIXME: 'devices', 'expanded_config', 'expanded_devices'
+    return LxdInstance(
+        architecture: instance['architecture'],
+        config: instance['config'],
+        createdAt: DateTime.parse(instance['created_at']),
+        description: instance['description'],
+        ephemeral: instance['ephemeral'],
+        lastUsedAt: DateTime.parse(instance['last_used_at']),
+        location: instance['location'],
+        name: instance['name'],
+        profiles: instance['profiles'].cast<String>(),
+        stateful: instance['stateful'],
+        status: instance['status'],
+        statusCode: instance['status_code'],
+        type: instance['type']);
+  }
+
+  /// Creates a new instance from [url] and [source].
   Future<LxdOperation> createInstance(
       {String? architecture,
       String? description,
