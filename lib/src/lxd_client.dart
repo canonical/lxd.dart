@@ -11,6 +11,7 @@ const _imagePath = '/1.0/images/';
 const _networkPath = '/1.0/networks/';
 const _profilePath = '/1.0/profiles/';
 const _projectPath = '/1.0/projects/';
+const _storagePoolPath = '/1.0/storage-pools/';
 
 /// General response from lxd.
 abstract class _LxdResponse {
@@ -414,6 +415,23 @@ class LxdProject {
       "LxdProject(config: $config, description: '$description', name: $name)";
 }
 
+class LxdStoragePool {
+  final Map<String, dynamic> config;
+  final String description;
+  final String name;
+  final String status;
+
+  LxdStoragePool(
+      {required this.config,
+      required this.description,
+      required this.name,
+      required this.status});
+
+  @override
+  String toString() =>
+      "LxdStoragePool(config: $config, description: '$description', name: $name, status: $status)";
+}
+
 /// Manages a connection to the lxd server.
 class LxdClient {
   HttpUnixClient? _client;
@@ -710,6 +728,29 @@ class LxdClient {
         config: project['config'],
         description: project['description'],
         name: project['name']);
+  }
+
+  /// Gets the names of the storage pools provided by the LXD server.
+  Future<List<String>> getStoragePools() async {
+    await _connect();
+    var poolPaths = await _requestSync('GET', '/1.0/storage-pools');
+    var poolNames = <String>[];
+    for (var path in poolPaths) {
+      if (path.startsWith(_storagePoolPath)) {
+        poolNames.add(path.substring(_storagePoolPath.length));
+      }
+    }
+    return poolNames;
+  }
+
+  /// Gets information on the pool with [name].
+  Future<LxdStoragePool> getStoragePool(String name) async {
+    var pool = await _requestSync('GET', '/1.0/storage-pools/$name');
+    return LxdStoragePool(
+        config: pool['config'],
+        description: pool['description'],
+        name: pool['name'],
+        status: pool['status']);
   }
 
   /// Terminates all active connections. If a client remains unclosed, the Dart process may not terminate.
