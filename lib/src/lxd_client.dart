@@ -371,6 +371,42 @@ class LxdNetwork {
       "LxdNetwork(config: $config, description: '$description', managed: $managed, name: $name, status: $status, type: $type)";
 }
 
+class LxdNetworkAddress {
+  final String address;
+  final String family;
+  final String netmask;
+  final String scope;
+
+  LxdNetworkAddress(
+      {required this.address,
+      required this.family,
+      required this.netmask,
+      required this.scope});
+
+  @override
+  String toString() =>
+      'LxdNetworkAddress(address: $address, family: $family, netmask: $netmask, scope: $scope)';
+}
+
+class LxdNetworkState {
+  final List<LxdNetworkAddress> addresses;
+  final String hwaddr;
+  final int mtu;
+  final String state;
+  final String type;
+
+  LxdNetworkState(
+      {required this.addresses,
+      required this.hwaddr,
+      required this.mtu,
+      required this.state,
+      required this.type});
+
+  @override
+  String toString() =>
+      "LxdNetworkState(addresses: $addresses, hwaddr: $hwaddr, mtu: $mtu, state: $state, type: $type)";
+}
+
 class LxdNetworkLease {
   final String address;
   final String hostname;
@@ -698,6 +734,25 @@ class LxdClient {
           type: lease['type']));
     }
     return leases;
+  }
+
+  /// Gets the current network state of the network with [name].
+  Future<LxdNetworkState> getNetworkState(String name) async {
+    var state = await _requestSync('GET', '/1.0/networks/$name/state');
+    var addresses = <LxdNetworkAddress>[];
+    for (var address in state['addresses']) {
+      addresses.add(LxdNetworkAddress(
+          address: address['address'],
+          family: address['family'],
+          netmask: address['netmask'],
+          scope: address['scope']));
+    }
+    return LxdNetworkState(
+        addresses: addresses,
+        hwaddr: state['hwaddr'],
+        mtu: state['mtu'],
+        state: state['state'],
+        type: state['type']);
   }
 
   /// Gets the names of the network ACLs provided by the LXD server.
