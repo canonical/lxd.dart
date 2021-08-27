@@ -351,6 +351,23 @@ class LxdInstance {
       "LxdInstance(architecture: $architecture, config: $config, createdAt: $createdAt, description: '$description', ephemeral: $ephemeral, lastUsedAt: $lastUsedAt, location: $location, name: $name, profiles: $profiles, stateful: $stateful, status: $status, statusCode: $statusCode, type: $type)";
 }
 
+class LxdInstanceState {
+  final Map<String, LxdNetworkState> network;
+  final int pid;
+  final String status;
+  final int statusCode;
+
+  LxdInstanceState(
+      {required this.network,
+      required this.pid,
+      required this.status,
+      required this.statusCode});
+
+  @override
+  String toString() =>
+      'LxdInstanceState(network: $network, pid: $pid, status: $status, statusCode: $statusCode)';
+}
+
 class LxdNetwork {
   final Map<String, dynamic> config;
   final String description;
@@ -663,6 +680,18 @@ class LxdClient {
         type: instance['type']);
   }
 
+  /// Gets runtime state of the instance with [name].
+  Future<LxdInstanceState> getInstanceState(String name) async {
+    var state = await _requestSync('GET', '/1.0/instances/$name/state');
+    return LxdInstanceState(
+        network: (state['network'] ?? {}).map<String, LxdNetworkState>(
+            (interface, state) =>
+                MapEntry(interface as String, _parseNetworkState(state))),
+        pid: state['pid'],
+        status: state['status'],
+        statusCode: state['status_code']);
+  }
+
   /// Creates a new instance from [url] and [source].
   Future<LxdOperation> createInstance(
       {String? architecture,
@@ -755,6 +784,10 @@ class LxdClient {
   /// Gets the current network state of the network with [name].
   Future<LxdNetworkState> getNetworkState(String name) async {
     var state = await _requestSync('GET', '/1.0/networks/$name/state');
+    return _parseNetworkState(state);
+  }
+
+  LxdNetworkState _parseNetworkState(dynamic state) {
     var addresses = <LxdNetworkAddress>[];
     for (var address in state['addresses']) {
       addresses.add(LxdNetworkAddress(
