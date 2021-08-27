@@ -8,6 +8,7 @@ import 'simplestream_client.dart';
 
 const _instancePath = '/1.0/instances/';
 const _imagePath = '/1.0/images/';
+const _networkPath = '/1.0/networks/';
 
 /// General response from lxd.
 abstract class _LxdResponse {
@@ -358,6 +359,27 @@ class LxdInstance {
       "LxdInstance(architecture: $architecture, config: $config, createdAt: $createdAt, description: '$description', ephemeral: $ephemeral, lastUsedAt: $lastUsedAt, location: $location, name: $name, profiles: $profiles, stateful: $stateful, status: $status, statusCode: $statusCode, type: $type)";
 }
 
+class LxdNetwork {
+  final Map<String, dynamic> config;
+  final String description;
+  final bool managed;
+  final String name;
+  final String status;
+  final String type;
+
+  LxdNetwork(
+      {required this.config,
+      required this.description,
+      required this.managed,
+      required this.name,
+      required this.status,
+      required this.type});
+
+  @override
+  String toString() =>
+      "LxdNetwork(config: $config, description: '$description', managed: $managed, name: $name, status: $status, type: $type)";
+}
+
 /// Manages a connection to the lxd server.
 class LxdClient {
   HttpUnixClient? _client;
@@ -584,6 +606,31 @@ class LxdClient {
   /// Deletes the instance with [name].
   Future<LxdOperation> deleteInstance(String name) async {
     return await _requestAsync('DELETE', '/1.0/instances/$name');
+  }
+
+  /// Gets the names of the networks provided by the LXD server.
+  Future<List<String>> getNetworks() async {
+    await _connect();
+    var networkPaths = await _requestSync('GET', '/1.0/networks');
+    var networkNames = <String>[];
+    for (var path in networkPaths) {
+      if (path.startsWith(_networkPath)) {
+        networkNames.add(path.substring(_networkPath.length));
+      }
+    }
+    return networkNames;
+  }
+
+  /// Gets information on the network with [name].
+  Future<LxdNetwork> getNetwork(String name) async {
+    var network = await _requestSync('GET', '/1.0/networks/$name');
+    return LxdNetwork(
+        config: network['config'],
+        description: network['description'],
+        managed: network['managed'],
+        name: network['name'],
+        status: network['status'],
+        type: network['type']);
   }
 
   /// Terminates all active connections. If a client remains unclosed, the Dart process may not terminate.
