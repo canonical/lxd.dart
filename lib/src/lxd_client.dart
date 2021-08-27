@@ -380,6 +380,25 @@ class LxdNetwork {
       "LxdNetwork(config: $config, description: '$description', managed: $managed, name: $name, status: $status, type: $type)";
 }
 
+class LxdNetworkLease {
+  final String address;
+  final String hostname;
+  final String hwaddr;
+  final String location;
+  final String type;
+
+  LxdNetworkLease(
+      {required this.address,
+      required this.hostname,
+      required this.hwaddr,
+      required this.location,
+      required this.type});
+
+  @override
+  String toString() =>
+      'LxdNetworkLease(address: $address, hostname: $hostname, hwaddr: $hwaddr, location: $location, type: $type)';
+}
+
 /// Manages a connection to the lxd server.
 class LxdClient {
   HttpUnixClient? _client;
@@ -631,6 +650,21 @@ class LxdClient {
         name: network['name'],
         status: network['status'],
         type: network['type']);
+  }
+
+  /// Gets DHCP leases on the network with [name].
+  Future<List<LxdNetworkLease>> getNetworkLeases(String name) async {
+    var leaseList = await _requestSync('GET', '/1.0/networks/$name/leases');
+    var leases = <LxdNetworkLease>[];
+    for (var lease in leaseList) {
+      leases.add(LxdNetworkLease(
+          address: lease['address'],
+          hostname: lease['hostname'],
+          hwaddr: lease['hwaddr'],
+          location: lease['location'],
+          type: lease['type']));
+    }
+    return leases;
   }
 
   /// Terminates all active connections. If a client remains unclosed, the Dart process may not terminate.
