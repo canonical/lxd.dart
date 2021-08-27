@@ -404,7 +404,7 @@ class LxdNetworkState {
 
   @override
   String toString() =>
-      "LxdNetworkState(addresses: $addresses, hwaddr: $hwaddr, mtu: $mtu, state: $state, type: $type)";
+      'LxdNetworkState(addresses: $addresses, hwaddr: $hwaddr, mtu: $mtu, state: $state, type: $type)';
 }
 
 class LxdNetworkLease {
