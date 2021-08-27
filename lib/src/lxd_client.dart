@@ -10,6 +10,7 @@ const _instancePath = '/1.0/instances/';
 const _imagePath = '/1.0/images/';
 const _networkPath = '/1.0/networks/';
 const _networkAclPath = '/1.0/network-acls/';
+const _operationPath = '/1.0/operations/';
 const _profilePath = '/1.0/profiles/';
 const _projectPath = '/1.0/projects/';
 const _storagePoolPath = '/1.0/storage-pools/';
@@ -496,6 +497,24 @@ class LxdClient {
 
   /// Sets the user agent sent in requests to lxd.
   set userAgent(String? value) => _userAgent = value;
+
+  /// Get the operations in progress (keyed by type).
+  Future<Map<String, List<String>>> getOperations() async {
+    await _connect();
+    var operationPaths = await _requestSync('GET', '/1.0/operations');
+    var operationIds = <String, List<String>>{};
+    for (var type in operationPaths.keys) {
+      var ids = <String>[];
+      for (var path in operationPaths[type]) {
+        if (path.startsWith(_operationPath)) {
+          ids.add(path.substring(_operationPath.length));
+        }
+      }
+      operationIds[type] = ids;
+    }
+
+    return operationIds;
+  }
 
   /// Get the current state of the operation with [id].
   Future<LxdOperation> getOperation(String id) async {
