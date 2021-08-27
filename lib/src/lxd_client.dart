@@ -9,6 +9,7 @@ import 'simplestream_client.dart';
 const _instancePath = '/1.0/instances/';
 const _imagePath = '/1.0/images/';
 const _networkPath = '/1.0/networks/';
+const _profilePath = '/1.0/profiles/';
 
 /// General response from lxd.
 abstract class _LxdResponse {
@@ -377,7 +378,7 @@ class LxdNetwork {
 
   @override
   String toString() =>
-      "LxdNetwork(config: $config, description: '$description', managed: $managed, name: $name, status: $status, type: $type)";
+      "LxdNetwork(description: '$description', managed: $managed, name: $name, status: $status, type: $type)";
 }
 
 class LxdNetworkLease {
@@ -397,6 +398,19 @@ class LxdNetworkLease {
   @override
   String toString() =>
       'LxdNetworkLease(address: $address, hostname: $hostname, hwaddr: $hwaddr, location: $location, type: $type)';
+}
+
+class LxdProfile {
+  final Map<String, dynamic> config;
+  final String description;
+  final String name;
+
+  LxdProfile(
+      {required this.config, required this.description, required this.name});
+
+  @override
+  String toString() =>
+      "LxdProfile(config: $config, description: '$description', name: $name)";
 }
 
 /// Manages a connection to the lxd server.
@@ -665,6 +679,28 @@ class LxdClient {
           type: lease['type']));
     }
     return leases;
+  }
+
+  /// Gets the names of the profiles provided by the LXD server.
+  Future<List<String>> getProfiles() async {
+    await _connect();
+    var profilePaths = await _requestSync('GET', '/1.0/profiles');
+    var profileNames = <String>[];
+    for (var path in profilePaths) {
+      if (path.startsWith(_profilePath)) {
+        profileNames.add(path.substring(_profilePath.length));
+      }
+    }
+    return profileNames;
+  }
+
+  /// Gets information on the profile with [name].
+  Future<LxdProfile> getProfile(String name) async {
+    var profile = await _requestSync('GET', '/1.0/profiles/$name');
+    return LxdProfile(
+        config: profile['config'],
+        description: profile['description'],
+        name: profile['name']);
   }
 
   /// Terminates all active connections. If a client remains unclosed, the Dart process may not terminate.
