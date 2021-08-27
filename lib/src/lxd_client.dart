@@ -10,6 +10,7 @@ const _instancePath = '/1.0/instances/';
 const _imagePath = '/1.0/images/';
 const _networkPath = '/1.0/networks/';
 const _profilePath = '/1.0/profiles/';
+const _projectPath = '/1.0/projects/';
 
 /// General response from lxd.
 abstract class _LxdResponse {
@@ -280,19 +281,6 @@ class LxdCertificate {
       required this.type});
 }
 
-class LxdProject {
-  final Map<String, dynamic> config;
-  final String description;
-  final String name;
-
-  LxdProject(
-      {required this.config, required this.description, required this.name});
-
-  @override
-  String toString() =>
-      "LxdProject(config: $config, description: '$description', name: $name)";
-}
-
 class LxdImage {
   final String architecture;
   final bool autoUpdate;
@@ -413,6 +401,19 @@ class LxdProfile {
       "LxdProfile(config: $config, description: '$description', name: $name)";
 }
 
+class LxdProject {
+  final Map<String, dynamic> config;
+  final String description;
+  final String name;
+
+  LxdProject(
+      {required this.config, required this.description, required this.name});
+
+  @override
+  String toString() =>
+      "LxdProject(config: $config, description: '$description', name: $name)";
+}
+
 /// Manages a connection to the lxd server.
 class LxdClient {
   HttpUnixClient? _client;
@@ -502,20 +503,6 @@ class LxdClient {
           type: certificate['type']));
     }
     return certificates;
-  }
-
-  /// Gets the projects provided by the LXD server.
-  Future<List<LxdProject>> getProjects() async {
-    var projectPaths = await _requestSync('GET', '/1.0/projects');
-    var projects = <LxdProject>[];
-    for (var path in projectPaths) {
-      var project = await _requestSync('GET', path);
-      projects.add(LxdProject(
-          config: project['config'],
-          description: project['description'],
-          name: project['name']));
-    }
-    return projects;
   }
 
   /// Gets the fingerprints of the images provided by the LXD server.
@@ -701,6 +688,28 @@ class LxdClient {
         config: profile['config'],
         description: profile['description'],
         name: profile['name']);
+  }
+
+  /// Gets the names of the projects provided by the LXD server.
+  Future<List<String>> getProjects() async {
+    await _connect();
+    var projectPaths = await _requestSync('GET', '/1.0/projects');
+    var projectNames = <String>[];
+    for (var path in projectPaths) {
+      if (path.startsWith(_projectPath)) {
+        projectNames.add(path.substring(_projectPath.length));
+      }
+    }
+    return projectNames;
+  }
+
+  /// Gets information on the project with [name].
+  Future<LxdProject> getProject(String name) async {
+    var project = await _requestSync('GET', '/1.0/projects/$name');
+    return LxdProject(
+        config: project['config'],
+        description: project['description'],
+        name: project['name']);
   }
 
   /// Terminates all active connections. If a client remains unclosed, the Dart process may not terminate.
