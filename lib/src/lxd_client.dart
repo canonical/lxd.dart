@@ -9,6 +9,7 @@ import 'simplestream_client.dart';
 const _instancePath = '/1.0/instances/';
 const _imagePath = '/1.0/images/';
 const _networkPath = '/1.0/networks/';
+const _networkAclPath = '/1.0/network-acls/';
 const _profilePath = '/1.0/profiles/';
 const _projectPath = '/1.0/projects/';
 const _storagePoolPath = '/1.0/storage-pools/';
@@ -367,7 +368,7 @@ class LxdNetwork {
 
   @override
   String toString() =>
-      "LxdNetwork(description: '$description', managed: $managed, name: $name, status: $status, type: $type)";
+      "LxdNetwork(config: $config, description: '$description', managed: $managed, name: $name, status: $status, type: $type)";
 }
 
 class LxdNetworkLease {
@@ -387,6 +388,19 @@ class LxdNetworkLease {
   @override
   String toString() =>
       'LxdNetworkLease(address: $address, hostname: $hostname, hwaddr: $hwaddr, location: $location, type: $type)';
+}
+
+class LxdNetworkAcl {
+  final Map<String, dynamic> config;
+  final String description;
+  final String name;
+
+  LxdNetworkAcl(
+      {required this.config, required this.description, required this.name});
+
+  @override
+  String toString() =>
+      "LxdNetworkAcl(config: $config, description: '$description', name: $name)";
 }
 
 class LxdProfile {
@@ -684,6 +698,28 @@ class LxdClient {
           type: lease['type']));
     }
     return leases;
+  }
+
+  /// Gets the names of the network ACLs provided by the LXD server.
+  Future<List<String>> getNetworkAcls() async {
+    await _connect();
+    var aclPaths = await _requestSync('GET', '/1.0/network-acls');
+    var aclNames = <String>[];
+    for (var path in aclPaths) {
+      if (path.startsWith(_networkAclPath)) {
+        aclNames.add(path.substring(_networkAclPath.length));
+      }
+    }
+    return aclNames;
+  }
+
+  /// Gets information on the network ACL with [name].
+  Future<LxdNetworkAcl> getNetworkAcl(String name) async {
+    var acl = await _requestSync('GET', '/1.0/network-acls/$name');
+    return LxdNetworkAcl(
+        config: acl['config'],
+        description: acl['description'],
+        name: acl['name']);
   }
 
   /// Gets the names of the profiles provided by the LXD server.
