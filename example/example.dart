@@ -12,7 +12,8 @@ void main() async {
     return;
   }
   print('Creating instance...');
-  var operation = await client.createInstance(url: url, source: download);
+  var operation = await client.createInstance(
+      url: url, source: download, status: 'Running');
   operation = await client.waitOperation(operation.id);
   if (operation.status == 'Success') {
     print('Instance ${operation.instanceNames.first} created.');

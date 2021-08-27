@@ -562,6 +562,16 @@ class LxdClient {
     return await _requestAsync('POST', '/1.0/instances', body);
   }
 
+  Future<LxdOperation> startInstance(String name) async {
+    return await _requestAsync(
+        'PUT', '/1.0/instances/$name/state', {'action': 'start'});
+  }
+
+  Future<LxdOperation> stopInstance(String name) async {
+    return await _requestAsync(
+        'PUT', '/1.0/instances/$name/state', {'action': 'stop'});
+  }
+
   /// Deletes the instance with [name].
   Future<LxdOperation> deleteInstance(String name) async {
     return await _requestAsync('DELETE', '/1.0/instances/$name');
