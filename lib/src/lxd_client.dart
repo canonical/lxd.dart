@@ -500,7 +500,6 @@ class LxdClient {
 
   /// Get the operations in progress (keyed by type).
   Future<Map<String, List<String>>> getOperations() async {
-    await _connect();
     var operationPaths = await _requestSync('GET', '/1.0/operations');
     var operationIds = <String, List<String>>{};
     for (var type in operationPaths.keys) {
@@ -518,27 +517,23 @@ class LxdClient {
 
   /// Get the current state of the operation with [id].
   Future<LxdOperation> getOperation(String id) async {
-    await _connect();
     var response = await _requestSync('GET', '/1.0/operations/$id');
     return _parseOperation(response);
   }
 
   /// Wait for the operation with [id] to complete.
   Future<LxdOperation> waitOperation(String id) async {
-    await _connect();
     var response = await _requestSync('GET', '/1.0/operations/$id/wait');
     return _parseOperation(response);
   }
 
   /// Cancel the operation with [id].
   Future<void> cancelOperation(String id) async {
-    await _connect();
     await _requestSync('DELETE', '/1.0/operations/$id');
   }
 
   /// Gets system resources information.
   Future<LxdResources> getResources() async {
-    await _connect();
     var data = await _requestSync('GET', '/1.0/resources');
     var cpuData = data['cpu'];
     var memoryData = data['memory'];
@@ -600,7 +595,6 @@ class LxdClient {
 
   /// Gets the fingerprints of the images provided by the LXD server.
   Future<List<String>> getImages({String? project, String? filter}) async {
-    await _connect();
     var parameters = <String, String>{};
     if (project != null) {
       parameters['project'] = project;
@@ -639,7 +633,6 @@ class LxdClient {
 
   /// Gets the names of the instances provided by the LXD server.
   Future<List<String>> getInstances() async {
-    await _connect();
     var instancePaths = await _requestSync('GET', '/1.0/instances');
     var instanceNames = <String>[];
     for (var path in instancePaths) {
@@ -677,7 +670,6 @@ class LxdClient {
       String? name,
       required SimplestreamDownloadItem source,
       required String url}) async {
-    await _connect();
     var body = {};
     if (architecture != null) {
       body['architecture'] = architecture;
@@ -723,7 +715,6 @@ class LxdClient {
 
   /// Gets the names of the networks provided by the LXD server.
   Future<List<String>> getNetworks() async {
-    await _connect();
     var networkPaths = await _requestSync('GET', '/1.0/networks');
     var networkNames = <String>[];
     for (var path in networkPaths) {
@@ -782,7 +773,6 @@ class LxdClient {
 
   /// Gets the names of the network ACLs provided by the LXD server.
   Future<List<String>> getNetworkAcls() async {
-    await _connect();
     var aclPaths = await _requestSync('GET', '/1.0/network-acls');
     var aclNames = <String>[];
     for (var path in aclPaths) {
@@ -804,7 +794,6 @@ class LxdClient {
 
   /// Gets the names of the profiles provided by the LXD server.
   Future<List<String>> getProfiles() async {
-    await _connect();
     var profilePaths = await _requestSync('GET', '/1.0/profiles');
     var profileNames = <String>[];
     for (var path in profilePaths) {
@@ -826,7 +815,6 @@ class LxdClient {
 
   /// Gets the names of the projects provided by the LXD server.
   Future<List<String>> getProjects() async {
-    await _connect();
     var projectPaths = await _requestSync('GET', '/1.0/projects');
     var projectNames = <String>[];
     for (var path in projectPaths) {
@@ -848,7 +836,6 @@ class LxdClient {
 
   /// Gets the names of the storage pools provided by the LXD server.
   Future<List<String>> getStoragePools() async {
-    await _connect();
     var poolPaths = await _requestSync('GET', '/1.0/storage-pools');
     var poolNames = <String>[];
     for (var path in poolPaths) {
@@ -904,6 +891,10 @@ class LxdClient {
   /// Does a synchronous request to lxd.
   Future<dynamic> _requestSync(String method, String path,
       [Map<String, String> queryParameters = const {}]) async {
+    // Get host information first.
+    if (method != 'GET' || path != '/1.0') {
+      await _connect();
+    }
     var client = await _getClient();
     var request = Request(method, Uri.http('localhost', path, queryParameters));
     _setHeaders(request);
@@ -915,6 +906,7 @@ class LxdClient {
   /// Does an asynchronous request to lxd.
   Future<dynamic> _requestAsync(String method, String path,
       [dynamic body]) async {
+    await _connect();
     var client = await _getClient();
     var request = Request(method, Uri.http('localhost', path));
     _setHeaders(request);
