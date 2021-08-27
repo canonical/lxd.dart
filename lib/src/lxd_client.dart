@@ -511,6 +511,12 @@ class LxdClient {
     return _parseOperation(response);
   }
 
+  /// Cancel the operation with [id].
+  Future<void> cancelOperation(String id) async {
+    await _connect();
+    await _requestSync('DELETE', '/1.0/operations/$id');
+  }
+
   /// Gets system resources information.
   Future<LxdResources> getResources() async {
     await _connect();
