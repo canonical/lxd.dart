@@ -104,8 +104,22 @@ class MockNetworkLease {
       this.type = ''});
 }
 
+class MockNetworkCounters {
+  final int bytesReceived;
+  final int bytesSent;
+  final int packetsReceived;
+  final int packetsSent;
+
+  const MockNetworkCounters(
+      {this.bytesReceived = 0,
+      this.bytesSent = 0,
+      this.packetsReceived = 0,
+      this.packetsSent = 0});
+}
+
 class MockNetworkState {
   final List<MockNetworkAddress> addresses;
+  final MockNetworkCounters counters;
   final String hwaddr;
   final int mtu;
   final String state;
@@ -113,6 +127,7 @@ class MockNetworkState {
 
   const MockNetworkState(
       {this.addresses = const [],
+      this.counters = const MockNetworkCounters(),
       this.hwaddr = '',
       this.mtu = 0,
       this.state = '',
@@ -467,6 +482,12 @@ class MockLxdServer {
                       'scope': address.scope
                     })
                 .toList(),
+            'counters': {
+              'bytes_received': state.counters.bytesReceived,
+              'bytes_sent': state.counters.bytesSent,
+              'packets_received': state.counters.packetsReceived,
+              'packets_sent': state.counters.packetsSent
+            },
             'hwaddr': state.hwaddr,
             'mtu': state.mtu,
             'state': state.state,
@@ -533,6 +554,12 @@ class MockLxdServer {
                 'scope': address.scope
               })
           .toList(),
+      'counters': {
+        'bytes_received': state.counters.bytesReceived,
+        'bytes_sent': state.counters.bytesSent,
+        'packets_received': state.counters.packetsReceived,
+        'packets_sent': state.counters.packetsSent
+      },
       'hwaddr': state.hwaddr,
       'mtu': state.mtu,
       'state': state.state,
@@ -824,6 +851,11 @@ void main() {
                       netmask: '64',
                       scope: 'global')
                 ],
+                counters: MockNetworkCounters(
+                    bytesReceived: 192021,
+                    bytesSent: 10888579,
+                    packetsReceived: 1748,
+                    packetsSent: 964),
                 hwaddr: '00:16:3e:0c:ee:dd',
                 mtu: 1500,
                 state: 'up',
@@ -846,6 +878,10 @@ void main() {
               netmask: '64',
               scope: 'global')
         ]));
+    expect(s.counters.bytesReceived, equals(192021));
+    expect(s.counters.bytesSent, equals(10888579));
+    expect(s.counters.packetsReceived, equals(1748));
+    expect(s.counters.packetsSent, equals(964));
     expect(s.hwaddr, equals('00:16:3e:0c:ee:dd'));
     expect(s.mtu, equals(1500));
     expect(s.state, equals('up'));
@@ -999,6 +1035,11 @@ void main() {
                 netmask: '24',
                 scope: 'global')
           ],
+              counters: MockNetworkCounters(
+                  bytesReceived: 250542118,
+                  bytesSent: 17524040140,
+                  packetsReceived: 1182515,
+                  packetsSent: 1567934),
               hwaddr: '00:16:3e:5a:83:57',
               mtu: 1500,
               state: 'up',
@@ -1017,6 +1058,10 @@ void main() {
               netmask: '24',
               scope: 'global')
         ]));
+    expect(state.counters.bytesReceived, equals(250542118));
+    expect(state.counters.bytesSent, equals(17524040140));
+    expect(state.counters.packetsReceived, equals(1182515));
+    expect(state.counters.packetsSent, equals(1567934));
     expect(state.hwaddr, equals('00:16:3e:5a:83:57'));
     expect(state.mtu, equals(1500));
     expect(state.state, equals('up'));

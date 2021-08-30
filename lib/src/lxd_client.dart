@@ -414,8 +414,22 @@ class LxdNetworkAddress {
       other.scope == scope;
 }
 
+class LxdNetworkCounters {
+  final int bytesReceived;
+  final int bytesSent;
+  final int packetsReceived;
+  final int packetsSent;
+
+  LxdNetworkCounters(
+      {required this.bytesReceived,
+      required this.bytesSent,
+      required this.packetsReceived,
+      required this.packetsSent});
+}
+
 class LxdNetworkState {
   final List<LxdNetworkAddress> addresses;
+  final LxdNetworkCounters counters;
   final String hwaddr;
   final int mtu;
   final String state;
@@ -423,6 +437,7 @@ class LxdNetworkState {
 
   LxdNetworkState(
       {required this.addresses,
+      required this.counters,
       required this.hwaddr,
       required this.mtu,
       required this.state,
@@ -804,8 +819,14 @@ class LxdClient {
           netmask: address['netmask'],
           scope: address['scope']));
     }
+    var counters = state['counters'];
     return LxdNetworkState(
         addresses: addresses,
+        counters: LxdNetworkCounters(
+            bytesReceived: counters['bytes_received'],
+            bytesSent: counters['bytes_sent'],
+            packetsReceived: counters['packets_received'],
+            packetsSent: counters['packets_sent']),
         hwaddr: state['hwaddr'],
         mtu: state['mtu'],
         state: state['state'],
