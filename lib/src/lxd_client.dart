@@ -294,6 +294,7 @@ class LxdImage {
   final String fingerprint;
   final DateTime lastUsedAt;
   final List<String> profiles;
+  final Map<String, String> properties;
   final bool public;
   final int size;
   final String type;
@@ -309,11 +310,16 @@ class LxdImage {
     required this.fingerprint,
     required this.lastUsedAt,
     required this.profiles,
+    required this.properties,
     required this.public,
     required this.size,
     required this.type,
     required this.uploadedAt,
   });
+
+  @override
+  String toString() =>
+      'LxdImage(architecture: $architecture, autoUpdate: $autoUpdate, cached: $cached, createdAt: $createdAt, expiresAt: $expiresAt, filename: $filename, fingerprint: $fingerprint, lastUsedAt: $lastUsedAt, profiles: $profiles, properties: $properties, public: $public, size: $size, type: $type, uploadedAt: $uploadedAt)';
 }
 
 class LxdInstance {
@@ -665,6 +671,7 @@ class LxdClient {
         fingerprint: image['fingerprint'],
         lastUsedAt: DateTime.parse(image['last_used_at']),
         profiles: image['profiles'].cast<String>(),
+        properties: image['properties'].cast<String, String>(),
         public: image['public'],
         size: image['size'],
         type: image['type'],
