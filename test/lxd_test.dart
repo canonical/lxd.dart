@@ -24,15 +24,15 @@ class MockImage {
       {this.architecture = '',
       this.autoUpdate = false,
       this.cached = false,
-      this.createdAt = '2018-10-23T12:03:31.917735286+13:00',
-      this.expiresAt = '2018-10-23T12:03:31.917735286+13:00',
+      this.createdAt = '1970-01-01',
+      this.expiresAt = '1970-01-01',
       this.filename = '',
-      this.lastUsedAt = '2018-10-23T12:03:31.917735286+13:00',
+      this.lastUsedAt = '1970-01-01',
       this.profiles = const [],
       this.public = false,
       this.size = 0,
       this.type = '',
-      this.uploadedAt = '2018-10-23T12:03:31.917735286+13:00'});
+      this.uploadedAt = '1970-01-01'});
 }
 
 class MockInstance {
@@ -49,16 +49,16 @@ class MockInstance {
   final int statusCode;
   final String type;
 
-  final Map<String, dynamic> network;
+  final Map<String, MockNetworkState> network;
   final int pid;
 
   MockInstance(
       {this.architecture = '',
       this.config = const {},
-      this.createdAt = '2018-10-23T12:03:31.917735286+13:00',
+      this.createdAt = '1970-01-01',
       this.description = '',
       this.ephemeral = false,
-      this.lastUsedAt = '2018-10-23T12:03:31.917735286+13:00',
+      this.lastUsedAt = '1970-01-01',
       this.location = '',
       this.profiles = const [],
       this.stateful = false,
@@ -69,6 +69,56 @@ class MockInstance {
       this.pid = 0});
 }
 
+class MockNetworkAddress {
+  final String address;
+  final String family;
+  final String netmask;
+  final String scope;
+
+  MockNetworkAddress(
+      {this.address = '',
+      this.family = '',
+      this.netmask = '',
+      this.scope = ''});
+}
+
+class MockNetworkAcl {
+  final Map<String, dynamic> config;
+  final String description;
+
+  MockNetworkAcl({this.config = const {}, this.description = ''});
+}
+
+class MockNetworkLease {
+  final String address;
+  final String hostname;
+  final String hwaddr;
+  final String location;
+  final String type;
+
+  MockNetworkLease(
+      {this.address = '',
+      this.hostname = '',
+      this.hwaddr = '',
+      this.location = '',
+      this.type = ''});
+}
+
+class MockNetworkState {
+  final List<MockNetworkAddress> addresses;
+  final String hwaddr;
+  final int mtu;
+  final String state;
+  final String type;
+
+  const MockNetworkState(
+      {this.addresses = const [],
+      this.hwaddr = '',
+      this.mtu = 0,
+      this.state = '',
+      this.type = ''});
+}
+
 class MockNetwork {
   final Map<String, dynamic> config;
   final String description;
@@ -76,10 +126,9 @@ class MockNetwork {
   final String status;
   final String type;
 
-  final List<Map<String, dynamic>> addresses;
-  final String hwaddr;
-  final int mtu;
-  final String state;
+  final MockNetworkState state;
+
+  final List<MockNetworkLease> leases;
 
   MockNetwork(
       {this.config = const {},
@@ -87,10 +136,8 @@ class MockNetwork {
       this.managed = false,
       this.status = '',
       this.type = '',
-      this.addresses = const [],
-      this.hwaddr = '',
-      this.mtu = 0,
-      this.state = ''});
+      this.state = const MockNetworkState(),
+      this.leases = const []});
 }
 
 class MockProfile {
@@ -128,6 +175,7 @@ class MockLxdServer {
   final Map<String, MockImage> images;
   final Map<String, MockInstance> instances;
   final Map<String, MockNetwork> networks;
+  final Map<String, MockNetworkAcl> networkAcls;
   final Map<String, MockProfile> profiles;
   final Map<String, MockProject> projects;
   final Map<String, MockStoragePool> storagePools;
@@ -138,6 +186,7 @@ class MockLxdServer {
       {this.images = const {},
       this.instances = const {},
       this.networks = const {},
+      this.networkAcls = const {},
       this.profiles = const {},
       this.projects = const {},
       this.storagePools = const {}});
@@ -256,6 +305,12 @@ class MockLxdServer {
         path[0] == '1.0' &&
         path[1] == 'network-acls') {
       _getNetworkAcls(response);
+    } else if (request.method == 'GET' &&
+        path.length == 3 &&
+        path[0] == '1.0' &&
+        path[1] == 'network-acls') {
+      var name = path[2];
+      _getNetworkAcl(response, name);
     } else if (request.method == 'GET' &&
         path.length == 2 &&
         path[0] == '1.0' &&
@@ -403,7 +458,20 @@ class MockLxdServer {
   void _getInstanceState(HttpResponse response, String name) {
     var instance = instances[name]!;
     _writeSyncResponse(response, {
-      'network': instance.network,
+      'network': instance.network.map((name, state) => MapEntry(name, {
+            'addresses': state.addresses
+                .map((address) => {
+                      'address': address.address,
+                      'family': address.family,
+                      'netmask': address.netmask,
+                      'scope': address.scope
+                    })
+                .toList(),
+            'hwaddr': state.hwaddr,
+            'mtu': state.mtu,
+            'state': state.state,
+            'type': state.type
+          })),
       'pid': instance.pid,
       'status': instance.status,
       'status_code': instance.statusCode
@@ -440,22 +508,47 @@ class MockLxdServer {
   }
 
   void _getNetworkLeases(HttpResponse response, String name) {
-    _writeSyncResponse(response, []);
+    var network = networks[name]!;
+    _writeSyncResponse(
+        response,
+        network.leases
+            .map((lease) => {
+                  'address': lease.address,
+                  'hostname': lease.hostname,
+                  'hwaddr': lease.hwaddr,
+                  'location': lease.location,
+                  'type': lease.type
+                })
+            .toList());
   }
 
   void _getNetworkState(HttpResponse response, String name) {
-    var network = networks[name]!;
+    var state = networks[name]!.state;
     _writeSyncResponse(response, {
-      'addresses': network.addresses,
-      'hwaddr': network.hwaddr,
-      'mtu': network.mtu,
-      'state': network.state,
-      'type': network.type
+      'addresses': state.addresses
+          .map((address) => {
+                'address': address.address,
+                'family': address.family,
+                'netmask': address.netmask,
+                'scope': address.scope
+              })
+          .toList(),
+      'hwaddr': state.hwaddr,
+      'mtu': state.mtu,
+      'state': state.state,
+      'type': state.type
     });
   }
 
   void _getNetworkAcls(HttpResponse response) {
-    _writeSyncResponse(response, []);
+    _writeSyncResponse(response,
+        networkAcls.keys.map((name) => '/1.0/network-acls/$name').toList());
+  }
+
+  void _getNetworkAcl(HttpResponse response, String name) {
+    var acl = networkAcls[name]!;
+    _writeSyncResponse(response,
+        {'config': acl.config, 'description': acl.description, 'name': name});
   }
 
   void _getProfiles(HttpResponse response) {
@@ -503,7 +596,7 @@ class MockLxdServer {
 
   void _writeOperationResponse(HttpResponse response) {
     _writeAsyncResponse(response, {
-      'created_at': '2018-10-23T12:03:31.917735286+13:00',
+      'created_at': '1970-01-01',
       'description': '',
       'err': '',
       'id': '',
@@ -511,7 +604,7 @@ class MockLxdServer {
       'may_cancel': false,
       'status': '',
       'status_code': 0,
-      'updated_at': '2018-10-23T12:03:31.917735286+13:00'
+      'updated_at': '1970-01-01'
     });
   }
 
@@ -594,57 +687,172 @@ void main() {
   });
 
   test('get images', () async {
-    var lxd = MockLxdServer(images: {'xxx': MockImage()});
+    var lxd = MockLxdServer(images: {
+      '06b86454720d36b20f94e31c6812e05ec51c1b568cf3a8abd273769d213394bb':
+          MockImage(),
+      '084dd79dd1360fd25a2479eb46674c2a5ef3022a40fe03c91ab3603e3402b8e1':
+          MockImage()
+    });
     await lxd.start();
 
     var client = LxdClient(socketPath: lxd.socketPath);
     var fingerprints = await client.getImages();
-    expect(fingerprints, equals(['xxx']));
+    expect(
+        fingerprints,
+        equals([
+          '06b86454720d36b20f94e31c6812e05ec51c1b568cf3a8abd273769d213394bb',
+          '084dd79dd1360fd25a2479eb46674c2a5ef3022a40fe03c91ab3603e3402b8e1'
+        ]));
 
     client.close();
     await lxd.close();
   });
 
   test('get image', () async {
-    var lxd = MockLxdServer(images: {'xxx': MockImage()});
+    var lxd = MockLxdServer(images: {
+      '06b86454720d36b20f94e31c6812e05ec51c1b568cf3a8abd273769d213394bb': MockImage(
+          architecture: 'x86_64',
+          autoUpdate: true,
+          cached: true,
+          createdAt: '2021-03-23T20:00:00-04:00',
+          expiresAt: '2025-03-23T20:00:00-04:00',
+          filename:
+              '06b86454720d36b20f94e31c6812e05ec51c1b568cf3a8abd273769d213394bb.rootfs',
+          lastUsedAt: '2021-03-22T20:39:00.575185384-04:00',
+          public: false,
+          size: 272237676,
+          type: 'container',
+          uploadedAt: '2021-03-24T14:18:15.115036787-04:00')
+    });
     await lxd.start();
 
     var client = LxdClient(socketPath: lxd.socketPath);
-    /*var image = */ await client.getImage('xxx');
+    var image = await client.getImage(
+        '06b86454720d36b20f94e31c6812e05ec51c1b568cf3a8abd273769d213394bb');
+    expect(image.architecture, equals('x86_64'));
+    expect(image.autoUpdate, isTrue);
+    expect(image.cached, isTrue);
+    expect(
+        image.createdAt, equals(DateTime.parse('2021-03-23T20:00:00-04:00')));
+    expect(
+        image.expiresAt, equals(DateTime.parse('2025-03-23T20:00:00-04:00')));
+    expect(
+        image.filename,
+        equals(
+            '06b86454720d36b20f94e31c6812e05ec51c1b568cf3a8abd273769d213394bb.rootfs'));
+    expect(
+        image.fingerprint,
+        equals(
+            '06b86454720d36b20f94e31c6812e05ec51c1b568cf3a8abd273769d213394bb'));
+    expect(image.lastUsedAt,
+        equals(DateTime.parse('2021-03-22T20:39:00.575185384-04:00')));
+    expect(image.profiles, equals([]));
+    expect(image.public, isFalse);
+    expect(image.size, equals(272237676));
+    expect(image.type, equals('container'));
+    expect(image.uploadedAt,
+        equals(DateTime.parse('2021-03-24T14:18:15.115036787-04:00')));
 
     client.close();
     await lxd.close();
   });
 
   test('get instances', () async {
-    var lxd = MockLxdServer(instances: {'xxx': MockInstance()});
+    var lxd = MockLxdServer(
+        instances: {'foo': MockInstance(), 'bar': MockInstance()});
     await lxd.start();
 
     var client = LxdClient(socketPath: lxd.socketPath);
     var instanceNames = await client.getInstances();
-    expect(instanceNames, equals(['xxx']));
+    expect(instanceNames, equals(['foo', 'bar']));
 
     client.close();
     await lxd.close();
   });
 
   test('get instance', () async {
-    var lxd = MockLxdServer(instances: {'xxx': MockInstance()});
+    var lxd = MockLxdServer(instances: {
+      'foo': MockInstance(
+          architecture: 'x86_64',
+          config: {'security.nesting': 'true'},
+          createdAt: '2021-03-23T20:00:00-04:00',
+          description: 'My test instance',
+          ephemeral: false,
+          lastUsedAt: '2021-03-23T20:00:00-04:00',
+          location: 'lxd01',
+          profiles: ['default'],
+          stateful: false,
+          status: 'Running',
+          statusCode: 0,
+          type: 'container')
+    });
     await lxd.start();
 
     var client = LxdClient(socketPath: lxd.socketPath);
-    /*var instance = */ await client.getInstance('xxx');
+    var instance = await client.getInstance('foo');
+    expect(instance.architecture, equals('x86_64'));
+    expect(instance.config, equals({'security.nesting': 'true'}));
+    expect(instance.createdAt,
+        equals(DateTime.parse('2021-03-23T20:00:00-04:00')));
+    expect(instance.description, equals('My test instance'));
+    expect(instance.ephemeral, isFalse);
+    expect(instance.lastUsedAt,
+        equals(DateTime.parse('2021-03-23T20:00:00-04:00')));
+    expect(instance.location, equals('lxd01'));
+    expect(instance.name, equals('foo'));
+    expect(instance.profiles, equals(['default']));
+    expect(instance.stateful, isFalse);
+    expect(instance.status, equals('Running'));
+    expect(instance.statusCode, equals(0));
+    expect(instance.type, equals('container'));
 
     client.close();
     await lxd.close();
   });
 
   test('get instance state', () async {
-    var lxd = MockLxdServer(instances: {'xxx': MockInstance()});
+    var lxd = MockLxdServer(instances: {
+      'foo': MockInstance(
+          status: 'Running',
+          statusCode: 0,
+          network: {
+            'eth0': MockNetworkState(
+                addresses: [
+                  MockNetworkAddress(
+                      address: 'fd42:4c81:5770:1eaf:216:3eff:fe0c:eedd',
+                      family: 'inet6',
+                      netmask: '64',
+                      scope: 'global')
+                ],
+                hwaddr: '00:16:3e:0c:ee:dd',
+                mtu: 1500,
+                state: 'up',
+                type: 'broadcast')
+          },
+          pid: 7281)
+    });
     await lxd.start();
 
     var client = LxdClient(socketPath: lxd.socketPath);
-    /*var state = */ await client.getInstanceState('xxx');
+    var state = await client.getInstanceState('foo');
+    expect(state.network.keys, equals(['eth0']));
+    var s = state.network['eth0']!;
+    expect(
+        s.addresses,
+        equals([
+          LxdNetworkAddress(
+              address: 'fd42:4c81:5770:1eaf:216:3eff:fe0c:eedd',
+              family: 'inet6',
+              netmask: '64',
+              scope: 'global')
+        ]));
+    expect(s.hwaddr, equals('00:16:3e:0c:ee:dd'));
+    expect(s.mtu, equals(1500));
+    expect(s.state, equals('up'));
+    expect(s.type, equals('broadcast'));
+    expect(state.pid, equals(7281));
+    expect(state.status, equals('Running'));
+    expect(state.statusCode, equals(0));
 
     client.close();
     await lxd.close();
@@ -708,127 +916,241 @@ void main() {
   });
 
   test('get networks', () async {
-    var lxd = MockLxdServer(networks: {'eth0': MockNetwork()});
+    var lxd = MockLxdServer(networks: {'lxdbr0': MockNetwork()});
     await lxd.start();
 
     var client = LxdClient(socketPath: lxd.socketPath);
     var networkNames = await client.getNetworks();
-    expect(networkNames, equals(['eth0']));
+    expect(networkNames, equals(['lxdbr0']));
 
     client.close();
     await lxd.close();
   });
 
   test('get network', () async {
-    var lxd = MockLxdServer(networks: {'eth0': MockNetwork()});
+    var lxd = MockLxdServer(networks: {
+      'lxdbr0': MockNetwork(
+          config: {
+            'ipv4.address': '10.0.0.1/24',
+            'ipv4.nat': 'true',
+            'ipv6.address': 'none'
+          },
+          description: 'My new LXD bridge',
+          managed: true,
+          status: 'Created',
+          type: 'bridge')
+    });
     await lxd.start();
 
     var client = LxdClient(socketPath: lxd.socketPath);
-    /*var network = */ await client.getNetwork('eth0');
+    var network = await client.getNetwork('lxdbr0');
+    expect(
+        network.config,
+        equals({
+          'ipv4.address': '10.0.0.1/24',
+          'ipv4.nat': 'true',
+          'ipv6.address': 'none'
+        }));
+    expect(network.description, equals('My new LXD bridge'));
+    expect(network.managed, isTrue);
+    expect(network.name, equals('lxdbr0'));
+    expect(network.status, equals('Created'));
+    expect(network.type, equals('bridge'));
 
     client.close();
     await lxd.close();
   });
 
   test('get network leases', () async {
-    var lxd = MockLxdServer();
+    var lxd = MockLxdServer(networks: {
+      'lxdbr0': MockNetwork(leases: [
+        MockNetworkLease(
+            address: '10.0.0.98',
+            hostname: 'c1',
+            hwaddr: '00:16:3e:2c:89:d9',
+            location: 'lxd01',
+            type: 'dynamic')
+      ])
+    });
     await lxd.start();
 
     var client = LxdClient(socketPath: lxd.socketPath);
-    /*var leases = */ await client.getNetworkLeases('eth0');
+    var leases = await client.getNetworkLeases('lxdbr0');
+    expect(leases, hasLength(1));
+    var lease = leases[0];
+    expect(lease.address, equals('10.0.0.98'));
+    expect(lease.hostname, equals('c1'));
+    expect(lease.hwaddr, equals('00:16:3e:2c:89:d9'));
+    expect(lease.location, equals('lxd01'));
+    expect(lease.type, equals('dynamic'));
 
     client.close();
     await lxd.close();
   });
 
   test('get network state', () async {
-    var lxd = MockLxdServer(networks: {'eth0': MockNetwork()});
+    var lxd = MockLxdServer(networks: {
+      'lxdbr0': MockNetwork(
+          state: MockNetworkState(
+              addresses: [
+            MockNetworkAddress(
+                address: '10.0.0.1',
+                family: 'inet',
+                netmask: '24',
+                scope: 'global')
+          ],
+              hwaddr: '00:16:3e:5a:83:57',
+              mtu: 1500,
+              state: 'up',
+              type: 'broadcast'))
+    });
     await lxd.start();
 
     var client = LxdClient(socketPath: lxd.socketPath);
-    /*var state = */ await client.getNetworkState('eth0');
+    var state = await client.getNetworkState('lxdbr0');
+    expect(
+        state.addresses,
+        equals([
+          LxdNetworkAddress(
+              address: '10.0.0.1',
+              family: 'inet',
+              netmask: '24',
+              scope: 'global')
+        ]));
+    expect(state.hwaddr, equals('00:16:3e:5a:83:57'));
+    expect(state.mtu, equals(1500));
+    expect(state.state, equals('up'));
+    expect(state.type, equals('broadcast'));
 
     client.close();
     await lxd.close();
   });
 
   test('get network acls', () async {
-    var lxd = MockLxdServer();
+    var lxd = MockLxdServer(
+        networkAcls: {'foo': MockNetworkAcl(), 'bar': MockNetworkAcl()});
     await lxd.start();
 
     var client = LxdClient(socketPath: lxd.socketPath);
-    /*var aclNames = */ await client.getNetworkAcls();
+    var aclNames = await client.getNetworkAcls();
+    expect(aclNames, equals(['foo', 'bar']));
 
     client.close();
     await lxd.close();
   });
 
-  test('get network acl', () async {});
+  test('get network acl', () async {
+    var lxd = MockLxdServer(networkAcls: {
+      'foo': MockNetworkAcl(
+          config: {'user.mykey': 'foo'}, description: 'Web servers')
+    });
+    await lxd.start();
+
+    var client = LxdClient(socketPath: lxd.socketPath);
+    var acl = await client.getNetworkAcl('foo');
+    expect(acl.config, equals({'user.mykey': 'foo'}));
+    expect(acl.description, equals('Web servers'));
+    expect(acl.name, equals('foo'));
+
+    client.close();
+    await lxd.close();
+  });
 
   test('get profiles', () async {
-    var lxd = MockLxdServer(profiles: {'test-profile': MockProfile()});
+    var lxd = MockLxdServer(
+        profiles: {'default': MockProfile(), 'foo': MockProfile()});
     await lxd.start();
 
     var client = LxdClient(socketPath: lxd.socketPath);
     var profileNames = await client.getProfiles();
-    expect(profileNames, equals(['test-profile']));
+    expect(profileNames, equals(['default', 'foo']));
 
     client.close();
     await lxd.close();
   });
 
   test('get profile', () async {
-    var lxd = MockLxdServer(profiles: {'test-profile': MockProfile()});
+    var lxd = MockLxdServer(profiles: {
+      'foo': MockProfile(
+          config: {'limits.cpu': '4', 'limits.memory': '4GiB'},
+          description: 'Medium size instances')
+    });
     await lxd.start();
 
     var client = LxdClient(socketPath: lxd.socketPath);
-    /*var profile = */ await client.getProfile('test-profile');
+    var profile = await client.getProfile('foo');
+    expect(
+        profile.config, equals({'limits.cpu': '4', 'limits.memory': '4GiB'}));
+    expect(profile.description, equals('Medium size instances'));
+    expect(profile.name, equals('foo'));
 
     client.close();
     await lxd.close();
   });
 
   test('get projects', () async {
-    var lxd = MockLxdServer(projects: {'test-project': MockProject()});
+    var lxd = MockLxdServer(
+        projects: {'default': MockProject(), 'foo': MockProject()});
     await lxd.start();
 
     var client = LxdClient(socketPath: lxd.socketPath);
     var projectNames = await client.getProjects();
-    expect(projectNames, equals(['test-project']));
+    expect(projectNames, equals(['default', 'foo']));
 
     client.close();
     await lxd.close();
   });
 
   test('get project', () async {
-    var lxd = MockLxdServer(projects: {'test-project': MockProject()});
+    var lxd = MockLxdServer(projects: {
+      'foo': MockProject(
+          config: {'features.networks': 'false', 'features.profiles': 'true'},
+          description: 'My new project')
+    });
     await lxd.start();
 
     var client = LxdClient(socketPath: lxd.socketPath);
-    /*var project = */ await client.getProject('test-project');
+    var project = await client.getProject('foo');
+    expect(project.config,
+        equals({'features.networks': 'false', 'features.profiles': 'true'}));
+    expect(project.description, equals('My new project'));
+    expect(project.name, equals('foo'));
 
     client.close();
     await lxd.close();
   });
 
   test('get storage pools', () async {
-    var lxd = MockLxdServer(storagePools: {'test-pool': MockStoragePool()});
+    var lxd = MockLxdServer(storagePools: {
+      'local': MockStoragePool(),
+      'remote': MockStoragePool()
+    });
     await lxd.start();
 
     var client = LxdClient(socketPath: lxd.socketPath);
     var poolNames = await client.getStoragePools();
-    expect(poolNames, equals(['test-pool']));
+    expect(poolNames, equals(['local', 'remote']));
 
     client.close();
     await lxd.close();
   });
 
   test('get storage pool', () async {
-    var lxd = MockLxdServer(storagePools: {'test-pool': MockStoragePool()});
+    var lxd = MockLxdServer(storagePools: {
+      'local': MockStoragePool(
+          config: {'volume.block.filesystem': 'ext4', 'volume.size': '50GiB'},
+          description: 'Local SSD pool',
+          status: 'Created')
+    });
     await lxd.start();
 
     var client = LxdClient(socketPath: lxd.socketPath);
-    /*var pool = */ await client.getStoragePool('test-pool');
+    var pool = await client.getStoragePool('local');
+    expect(pool.config,
+        equals({'volume.block.filesystem': 'ext4', 'volume.size': '50GiB'}));
+    expect(pool.description, equals('Local SSD pool'));
+    expect(pool.name, equals('local'));
+    expect(pool.status, equals('Created'));
 
     client.close();
     await lxd.close();

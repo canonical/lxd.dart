@@ -404,6 +404,14 @@ class LxdNetworkAddress {
   @override
   String toString() =>
       'LxdNetworkAddress(address: $address, family: $family, netmask: $netmask, scope: $scope)';
+
+  @override
+  bool operator ==(other) =>
+      other is LxdNetworkAddress &&
+      other.address == address &&
+      other.family == family &&
+      other.netmask == netmask &&
+      other.scope == scope;
 }
 
 class LxdNetworkState {
