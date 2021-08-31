@@ -678,9 +678,32 @@ class LxdClient {
         uploadedAt: DateTime.parse(image['uploaded_at']));
   }
 
+  /// Gets the remote images available on the Simplestreams server at [url].
+  Future<List<SimplestreamProduct>> getRemoteImages(String url) async {
+    var s = SimplestreamClient(url);
+
+    var lxdProducts = <SimplestreamProduct>[];
+    var products = await s.getProducts(datatype: 'image-downloads');
+    for (var product in products) {
+      for (var v in product.versions.values) {
+        var lxdItem = _getLxdItem(product);
+        if (lxdItem == null) {
+          continue;
+        }
+        if (lxdItem.combinedSquashfsSha256 != null ||
+            lxdItem.combinedDisk1ImgSha256 != null) {
+          lxdProducts.add(product);
+        }
+      }
+    }
+
+    s.close();
+
+    return lxdProducts;
+  }
+
   /// Finds the image with [name] (alias or fingeprint) on the Simplestreams server at [url].
-  Future<SimplestreamDownloadItem?> findRemoteImage(
-      String url, String name) async {
+  Future<SimplestreamProduct?> findRemoteImage(String url, String name) async {
     await _connect();
     var architecture = _hostInfo['environment']['architectures'][0] ?? '';
 
@@ -693,14 +716,25 @@ class LxdClient {
         continue;
       }
 
-      var download = _findLxdDownloadItem(product);
-      if (download != null) {
+      if (_getLxdItem(product) != null) {
         s.close();
-        return download;
+        return product;
       }
     }
 
     s.close();
+    return null;
+  }
+
+  SimplestreamDownloadItem? _getLxdItem(SimplestreamProduct product) {
+    for (var v in product.versions.values) {
+      for (var item in v.values) {
+        if ((item as SimplestreamDownloadItem).ftype == 'lxd.tar.xz') {
+          return item;
+        }
+      }
+    }
+
     return null;
   }
 
@@ -737,18 +771,6 @@ class LxdClient {
     }
 
     return architecture;
-  }
-
-  SimplestreamDownloadItem? _findLxdDownloadItem(SimplestreamProduct product) {
-    var version = product.versions.values.first;
-
-    for (var v in version.values) {
-      if (v is SimplestreamDownloadItem && v.ftype == 'lxd.tar.xz') {
-        return v;
-      }
-    }
-
-    return null;
   }
 
   /// Gets the names of the instances provided by the LXD server.
@@ -800,7 +822,7 @@ class LxdClient {
       {String? architecture,
       String? description,
       String? name,
-      required SimplestreamDownloadItem source,
+      required SimplestreamProduct source,
       required String url}) async {
     var body = {};
     if (architecture != null) {
@@ -814,7 +836,7 @@ class LxdClient {
     }
     var s = {};
     s['type'] = 'image';
-    s['fingerprint'] = source.combinedSquashfsSha256;
+    s['fingerprint'] = _getLxdItem(source)?.combinedSquashfsSha256 ?? '';
     s['protocol'] = 'simplestreams';
     s['server'] = url;
     body['source'] = s;
