@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:lxd/lxd.dart';
-import 'package:lxd/src/simplestream_client.dart';
 import 'package:test/test.dart';
 
 class MockImage {
@@ -903,12 +902,15 @@ void main() {
 
     var client = LxdClient(socketPath: lxd.socketPath);
     /*var operation = */ await client.createInstance(
-        source: SimplestreamProduct(versions: {
-          '1': {
-            'lxd.tar.xz': SimplestreamDownloadItem(ftype: '', path: '', size: 0)
-          }
-        }),
-        url: 'https://example.com');
+        image: LxdRemoteImage(
+            architecture: 'amd64',
+            aliases: {},
+            description: 'Test Image',
+            fingerprint:
+                '06b86454720d36b20f94e31c6812e05ec51c1b568cf3a8abd273769d213394bb',
+            size: 272237676,
+            type: LxdRemoteImageType.container,
+            url: 'https://example.com'));
 
     client.close();
     await lxd.close();

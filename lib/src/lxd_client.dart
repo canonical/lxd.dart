@@ -529,6 +529,31 @@ class LxdStoragePool {
       "LxdStoragePool(config: $config, description: '$description', name: $name, status: $status)";
 }
 
+enum LxdRemoteImageType { container, virtualMachine }
+
+class LxdRemoteImage {
+  final String architecture;
+  final String description;
+  final Set<String> aliases;
+  final String fingerprint;
+  final int size;
+  final LxdRemoteImageType type;
+  final String url;
+
+  LxdRemoteImage(
+      {required this.architecture,
+      required this.description,
+      required this.aliases,
+      required this.fingerprint,
+      required this.size,
+      required this.type,
+      required this.url});
+
+  @override
+  String toString() =>
+      'LxdRemoteImage(architecture: $architecture, aliases: $aliases, description: $description, fingerprint: $fingerprint, size: $size, type: $type, url: $url)';
+}
+
 /// Manages a connection to the lxd server.
 class LxdClient {
   HttpUnixClient? _client;
@@ -679,31 +704,22 @@ class LxdClient {
   }
 
   /// Gets the remote images available on the Simplestreams server at [url].
-  Future<List<SimplestreamProduct>> getRemoteImages(String url) async {
+  Future<List<LxdRemoteImage>> getRemoteImages(String url) async {
     var s = SimplestreamClient(url);
 
-    var lxdProducts = <SimplestreamProduct>[];
+    var images = <LxdRemoteImage>[];
     var products = await s.getProducts(datatype: 'image-downloads');
     for (var product in products) {
-      for (var v in product.versions.values) {
-        var lxdItem = _getLxdItem(product);
-        if (lxdItem == null) {
-          continue;
-        }
-        if (lxdItem.combinedSquashfsSha256 != null ||
-            lxdItem.combinedDisk1ImgSha256 != null) {
-          lxdProducts.add(product);
-        }
-      }
+      images.addAll(_getRemoteImages(url, product));
     }
 
     s.close();
 
-    return lxdProducts;
+    return images;
   }
 
   /// Finds the image with [name] (alias or fingeprint) on the Simplestreams server at [url].
-  Future<SimplestreamProduct?> findRemoteImage(String url, String name) async {
+  Future<LxdRemoteImage?> findRemoteImage(String url, String name) async {
     await _connect();
     var architecture = _hostInfo['environment']['architectures'][0] ?? '';
 
@@ -716,9 +732,10 @@ class LxdClient {
         continue;
       }
 
-      if (_getLxdItem(product) != null) {
+      var images = _getRemoteImages(url, product);
+      if (images.isNotEmpty) {
         s.close();
-        return product;
+        return images.first;
       }
     }
 
@@ -726,16 +743,42 @@ class LxdClient {
     return null;
   }
 
-  SimplestreamDownloadItem? _getLxdItem(SimplestreamProduct product) {
+  List<LxdRemoteImage> _getRemoteImages(
+      String url, SimplestreamProduct product) {
+    var images = <LxdRemoteImage>[];
+
     for (var v in product.versions.values) {
-      for (var item in v.values) {
-        if ((item as SimplestreamDownloadItem).ftype == 'lxd.tar.xz') {
-          return item;
-        }
+      var lxdItem = v['lxd.tar.xz'] as SimplestreamDownloadItem?;
+      if (lxdItem == null) {
+        continue;
+      }
+
+      var description = '${product.os ?? ''} ${product.releaseTitle ?? ''}';
+
+      if (lxdItem.combinedSquashfsSha256 != null) {
+        var squashfsItem = v['squashfs'] as SimplestreamDownloadItem;
+        images.add(LxdRemoteImage(
+            architecture: product.architecture ?? '',
+            aliases: product.aliases,
+            description: description,
+            fingerprint: lxdItem.combinedSquashfsSha256!,
+            size: squashfsItem.size,
+            type: LxdRemoteImageType.container,
+            url: url));
+      } else if (lxdItem.combinedDisk1ImgSha256 != null) {
+        var disk1ImgItem = v['disk1.img'] as SimplestreamDownloadItem;
+        images.add(LxdRemoteImage(
+            architecture: product.architecture ?? '',
+            aliases: product.aliases,
+            description: description,
+            fingerprint: lxdItem.combinedDisk1ImgSha256!,
+            size: disk1ImgItem.size,
+            type: LxdRemoteImageType.virtualMachine,
+            url: url));
       }
     }
 
-    return null;
+    return images;
   }
 
   /// Get the canonical name for [architecture].
@@ -817,13 +860,12 @@ class LxdClient {
         statusCode: state['status_code']);
   }
 
-  /// Creates a new instance from [url] and [source].
+  /// Creates a new instance from [image].
   Future<LxdOperation> createInstance(
       {String? architecture,
       String? description,
       String? name,
-      required SimplestreamProduct source,
-      required String url}) async {
+      required LxdRemoteImage image}) async {
     var body = {};
     if (architecture != null) {
       body['architecture'] = architecture;
@@ -836,9 +878,9 @@ class LxdClient {
     }
     var s = {};
     s['type'] = 'image';
-    s['fingerprint'] = _getLxdItem(source)?.combinedSquashfsSha256 ?? '';
+    s['fingerprint'] = image.fingerprint;
     s['protocol'] = 'simplestreams';
-    s['server'] = url;
+    s['server'] = image.url;
     body['source'] = s;
     return await _requestAsync('POST', '/1.0/instances', body);
   }

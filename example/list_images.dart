@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:lxd/lxd.dart';
-import 'package:lxd/src/simplestream_client.dart';
 
 void main(List<String> args) async {
   var remote = 'local';
@@ -49,36 +48,22 @@ void main(List<String> args) async {
     }
 
     var client = LxdClient();
-    var products = await client.getRemoteImages(url);
-    for (var product in products) {
-      for (var v in product.versions.values) {
-        var lxdItem = v['lxd.tar.xz'] as SimplestreamDownloadItem;
-        if (lxdItem.combinedSquashfsSha256 != null) {
-          var squashfsItem = v['squashfs'] as SimplestreamDownloadItem;
-          rows.add([
-            product.aliases.first,
-            lxdItem.combinedSquashfsSha256?.substring(0, 12) ?? '',
-            'yes',
-            product.releaseTitle ?? '',
-            product.architecture ?? '',
-            'CONTAINER',
-            squashfsItem.size.toString(),
-            ''
-          ]);
-        } else if (lxdItem.combinedDisk1ImgSha256 != null) {
-          var disk1ImgItem = v['disk1.img'] as SimplestreamDownloadItem;
-          rows.add([
-            product.aliases.first,
-            lxdItem.combinedDisk1ImgSha256?.substring(0, 12) ?? '',
-            'yes',
-            product.releaseTitle ?? '',
-            product.architecture ?? '',
-            'VIRTUAL-MACHINE',
-            disk1ImgItem.size.toString(),
-            ''
-          ]);
-        }
-      }
+    var images = await client.getRemoteImages(url);
+    for (var image in images) {
+      rows.add([
+        image.aliases.first,
+        image.fingerprint.substring(0, 12),
+        'yes',
+        image.description,
+        image.architecture,
+        {
+              LxdRemoteImageType.container: 'CONTAINER',
+              LxdRemoteImageType.virtualMachine: 'VIRTUAL-MACHINE'
+            }[image.type] ??
+            '',
+        image.size.toString(),
+        ''
+      ]);
     }
     client.close();
   }
