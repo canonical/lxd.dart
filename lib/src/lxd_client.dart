@@ -535,7 +535,7 @@ class LxdClient {
   String? _userAgent;
   final String? _socketPath;
 
-  dynamic hostInfo;
+  dynamic _hostInfo;
 
   LxdClient({String userAgent = 'lxd.dart', String? socketPath})
       : _userAgent = userAgent,
@@ -676,6 +676,79 @@ class LxdClient {
         size: image['size'],
         type: image['type'],
         uploadedAt: DateTime.parse(image['uploaded_at']));
+  }
+
+  /// Finds the image with [name] (alias or fingeprint) on the Simplestreams server at [url].
+  Future<SimplestreamDownloadItem?> findRemoteImage(
+      String url, String name) async {
+    await _connect();
+    var architecture = _hostInfo['environment']['architectures'][0] ?? '';
+
+    var s = SimplestreamClient(url);
+
+    var products = await s.getProducts(datatype: 'image-downloads');
+    for (var product in products) {
+      if (!product.aliases.contains(name) ||
+          _getArchitecture(product.architecture ?? '') != architecture) {
+        continue;
+      }
+
+      var download = _findLxdDownloadItem(product);
+      if (download != null) {
+        s.close();
+        return download;
+      }
+    }
+
+    s.close();
+    return null;
+  }
+
+  /// Get the canonical name for [architecture].
+  String _getArchitecture(String architecture) {
+    const aliases = <String, List<String>>{
+      'i686': ['i386', 'i586', '386', 'x86', 'generic_32'],
+      'x86_64': ['amd64', 'generic_64'],
+      'armv7l': [
+        'armel',
+        'armhf',
+        'arm',
+        'armhfp',
+        'armv7a_hardfp',
+        'armv7',
+        'armv7a_vfpv3_hardfp'
+      ],
+      'aarch64': ['arm64', 'arm64_generic'],
+      'ppc': ['powerpc'],
+      'ppc64': ['powerpc64', 'ppc64'],
+      'ppc64le': ['ppc64el'],
+      's390x': ['mipsel'],
+      'mips': ['mips64el'],
+      'mips64': [],
+      'riscv32': [],
+      'riscv64': []
+    };
+
+    for (var name in aliases.keys) {
+      if (architecture == name ||
+          (aliases[name]?.contains(architecture) ?? false)) {
+        return name;
+      }
+    }
+
+    return architecture;
+  }
+
+  SimplestreamDownloadItem? _findLxdDownloadItem(SimplestreamProduct product) {
+    var version = product.versions.values.first;
+
+    for (var v in version.values) {
+      if (v is SimplestreamDownloadItem && v.ftype == 'lxd.tar.xz') {
+        return v;
+      }
+    }
+
+    return null;
   }
 
   /// Gets the names of the instances provided by the LXD server.
@@ -931,7 +1004,7 @@ class LxdClient {
   }
 
   Future<void> _connect() async {
-    hostInfo ??= await _requestSync('GET', '/1.0');
+    _hostInfo ??= await _requestSync('GET', '/1.0');
   }
 
   /// Get the HTTP client to communicate with lxd.
