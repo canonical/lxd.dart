@@ -77,7 +77,7 @@ Future<List<List<String>>> listSimpleStreamImages(String url) async {
   var rows = <List<String>>[];
 
   var s = SimplestreamClient(url);
-  var products = await s.getProducts();
+  var products = await s.getProducts(datatype: 'image-downloads');
   for (var product in products) {
     for (var v in product.versions.values) {
       var lxdItem = v['lxd.tar.xz'] as SimplestreamDownloadItem?;

@@ -78,7 +78,9 @@ class SimplestreamClient {
   /// Sets the user agent sent in requests to the simple streams server.
   set userAgent(String? value) => _userAgent = value;
 
-  Future<List<SimplestreamProduct>> getProducts() async {
+  /// Gets all the products this server provides.
+  /// If provided, only gets products with the given [datatype].
+  Future<List<SimplestreamProduct>> getProducts({String? datatype}) async {
     var products = <SimplestreamProduct>[];
 
     var body = await _getJson('streams/v1/index.json');
@@ -93,16 +95,9 @@ class SimplestreamClient {
       if (format != 'products:1.0') {
         throw 'Unsupported simplestream products format $format';
       }
-      var datatype = products_['datatype'];
-      switch (datatype) {
-        case 'image-ids':
-          break;
-        case 'image-downloads':
-          break;
-        default:
-          continue;
+      if (datatype != null && products_['datatype'] != datatype) {
+        continue;
       }
-
       var path = products_['path'];
       products.addAll(await _getProducts(path));
     }
