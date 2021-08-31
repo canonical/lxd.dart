@@ -15,6 +15,7 @@ class MockImage {
   final String filename;
   final String lastUsedAt;
   final List<String> profiles;
+  final Map<String, String> properties;
   final bool public;
   final int size;
   final String type;
@@ -29,6 +30,7 @@ class MockImage {
       this.filename = '',
       this.lastUsedAt = '1970-01-01',
       this.profiles = const [],
+      this.properties = const {},
       this.public = false,
       this.size = 0,
       this.type = '',
@@ -439,6 +441,7 @@ class MockLxdServer {
       'fingerprint': fingerprint,
       'last_used_at': image.lastUsedAt,
       'profiles': image.profiles,
+      'properties': image.properties,
       'public': image.public,
       'size': image.size,
       'type': image.type,
@@ -900,7 +903,11 @@ void main() {
 
     var client = LxdClient(socketPath: lxd.socketPath);
     /*var operation = */ await client.createInstance(
-        source: SimplestreamDownloadItem(ftype: '', path: '', size: 0),
+        source: SimplestreamProduct(versions: {
+          '1': {
+            'lxd.tar.xz': SimplestreamDownloadItem(ftype: '', path: '', size: 0)
+          }
+        }),
         url: 'https://example.com');
 
     client.close();
