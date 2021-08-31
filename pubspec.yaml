@@ -1,5 +1,5 @@
 name: lxd
-version: 0.0.3
+version: 0.0.4
 
 description:
   Provides a client to access lxd, which allows you to manage containers on a Linux system.

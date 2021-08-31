@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.4
+
+* Simplify getting remote images.
+
 ## 0.0.3
 
 * Add new LxdClient methods getProfiles, getProfile, getNetworkState, getStoragePools, getStoragePool, getNetworkAcls, getNetworkAcl, cancelOperation, getOperations, getInstanceState.
