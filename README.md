@@ -10,8 +10,7 @@ import 'package:lxd/lxd.dart';
 var client = LxdClient();
 
 print('Looking for image...');
-var url = 'https://cloud-images.ubuntu.com/releases';
-var image = await client.findRemoteImage(url, '20.04');
+var image = await client.findRemoteImage('https://cloud-images.ubuntu.com/releases', '20.04');
 if (image == null) {
   print("Can't find image");
   return;
