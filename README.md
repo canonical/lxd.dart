@@ -1,4 +1,5 @@
 [![Pub Package](https://img.shields.io/pub/v/lxd.svg)](https://pub.dev/packages/lxd)
+[![codecov](https://codecov.io/gh/canonical/lxd.dart/branch/main/graph/badge.svg?token=SIMIT5LCTH)](https://codecov.io/gh/canonical/lxd.dart)
 
 Provides a client to access lxd, which allows you to manage containers on a Linux system.
 
