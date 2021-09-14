@@ -194,6 +194,41 @@ class MockStoragePool {
       {this.config = const {}, this.description = '', this.status = ''});
 }
 
+class MockOperation {
+  final String createdAt;
+  final String description;
+  final String? error;
+  final String id;
+  final bool mayCancel;
+  final String status;
+  final int statusCode;
+  final String updatedAt;
+
+  MockOperation(
+      {this.createdAt = '1970-01-01',
+      this.description = '',
+      this.error,
+      required this.id,
+      this.mayCancel = false,
+      this.status = '',
+      this.statusCode = 0,
+      this.updatedAt = '1970-01-01'});
+
+  Map<String, dynamic> toJson() {
+    return {
+      'created_at': createdAt,
+      'description': description,
+      'err': error ?? '',
+      'id': id,
+      'resources': {},
+      'may_cancel': false,
+      'status': status,
+      'status_code': statusCode,
+      'updated_at': updatedAt
+    };
+  }
+}
+
 class MockLxdServer {
   Directory? _tempDir;
   String? _socketPath;
@@ -208,6 +243,7 @@ class MockLxdServer {
   final Map<String, MockInstance> instances;
   final Map<String, MockNetwork> networks;
   final Map<String, MockNetworkAcl> networkAcls;
+  final operations = <String, MockOperation>{};
   final Map<String, MockProfile> profiles;
   final Map<String, MockProject> projects;
   final Map<String, MockStoragePool> storagePools;
@@ -314,6 +350,30 @@ class MockLxdServer {
         path[1] == 'instances') {
       var name = path[2];
       _deleteInstance(response, name);
+    } else if (request.method == 'GET' &&
+        path.length == 2 &&
+        path[0] == '1.0' &&
+        path[1] == 'operations') {
+      _getOperations(response);
+    } else if (request.method == 'GET' &&
+        path.length == 3 &&
+        path[0] == '1.0' &&
+        path[1] == 'operations') {
+      var id = path[2];
+      _getOperation(response, id);
+    } else if (request.method == 'GET' &&
+        path.length == 4 &&
+        path[0] == '1.0' &&
+        path[1] == 'operations' &&
+        path[3] == 'wait') {
+      var id = path[2];
+      _waitOperation(response, id);
+    } else if (request.method == 'DELETE' &&
+        path.length == 3 &&
+        path[0] == '1.0' &&
+        path[1] == 'operations') {
+      var id = path[2];
+      _deleteOperation(response, id);
     } else if (request.method == 'GET' &&
         path.length == 2 &&
         path[0] == '1.0' &&
@@ -541,15 +601,35 @@ class MockLxdServer {
   }
 
   void _putInstanceState(HttpResponse response, String name) {
-    _writeOperationResponse(response);
+    var operation = _addOperation();
+    _writeAsyncResponse(response, operation.toJson());
   }
 
   void _createInstance(HttpResponse response) {
-    _writeOperationResponse(response);
+    var operation = _addOperation();
+    _writeAsyncResponse(response, operation.toJson());
   }
 
   void _deleteInstance(HttpResponse response, String name) {
-    _writeOperationResponse(response);
+    var operation = _addOperation();
+    _writeAsyncResponse(response, operation.toJson());
+  }
+
+  void _getOperations(HttpResponse response) {
+    _writeSyncResponse(
+        response, operations.keys.map((id) => '/1.0/operations/$id').toList());
+  }
+
+  void _getOperation(HttpResponse response, String id) {
+    _writeSyncResponse(response, operations[id]!.toJson());
+  }
+
+  void _waitOperation(HttpResponse response, String id) {
+    _writeSyncResponse(response, operations[id]!.toJson());
+  }
+
+  void _deleteOperation(HttpResponse response, String id) {
+    _writeSyncResponse(response, {});
   }
 
   void _getNetworks(HttpResponse response) {
@@ -662,18 +742,12 @@ class MockLxdServer {
     });
   }
 
-  void _writeOperationResponse(HttpResponse response) {
-    _writeAsyncResponse(response, {
-      'created_at': '1970-01-01',
-      'description': '',
-      'err': '',
-      'id': '',
-      'resources': {},
-      'may_cancel': false,
-      'status': '',
-      'status_code': 0,
-      'updated_at': '1970-01-01'
-    });
+  MockOperation _addOperation({String description = '', String status = ''}) {
+    var id = operations.length.toString();
+    var operation =
+        MockOperation(description: description, id: id, status: status);
+    operations[id] = operation;
+    return operation;
   }
 
   void _writeSyncResponse(HttpResponse response, dynamic metadata) {
@@ -966,7 +1040,7 @@ void main() {
     await lxd.start();
 
     var client = LxdClient(socketPath: lxd.socketPath);
-    /*var operation = */ await client.createInstance(
+    var operation = await client.createInstance(
         image: LxdRemoteImage(
             architecture: 'amd64',
             aliases: {},
@@ -976,6 +1050,7 @@ void main() {
             size: 272237676,
             type: LxdRemoteImageType.container,
             url: 'https://example.com'));
+    operation = await client.waitOperation(operation.id);
 
     client.close();
     await lxd.close();
@@ -986,7 +1061,8 @@ void main() {
     await lxd.start();
 
     var client = LxdClient(socketPath: lxd.socketPath);
-    /*var operation = */ await client.startInstance('test-instance');
+    var operation = await client.startInstance('test-instance');
+    operation = await client.waitOperation(operation.id);
 
     client.close();
     await lxd.close();
@@ -997,7 +1073,8 @@ void main() {
     await lxd.start();
 
     var client = LxdClient(socketPath: lxd.socketPath);
-    /*var operation = */ await client.stopInstance('test-instance');
+    var operation = await client.stopInstance('test-instance');
+    operation = await client.waitOperation(operation.id);
 
     client.close();
     await lxd.close();
@@ -1008,7 +1085,8 @@ void main() {
     await lxd.start();
 
     var client = LxdClient(socketPath: lxd.socketPath);
-    /*var operation = */ await client.restartInstance('test-instance');
+    var operation = await client.restartInstance('test-instance');
+    operation = await client.waitOperation(operation.id);
 
     client.close();
     await lxd.close();
@@ -1019,7 +1097,8 @@ void main() {
     await lxd.start();
 
     var client = LxdClient(socketPath: lxd.socketPath);
-    /*var operation = */ await client.deleteInstance('test-instance');
+    var operation = await client.deleteInstance('test-instance');
+    operation = await client.waitOperation(operation.id);
 
     client.close();
     await lxd.close();
