@@ -5,6 +5,21 @@ import 'dart:io';
 import 'package:lxd/lxd.dart';
 import 'package:test/test.dart';
 
+class MockCertificate {
+  final String certificate;
+  final String name;
+  final List<String> projects;
+  final bool restricted;
+  final String type;
+
+  MockCertificate(
+      {this.certificate = '',
+      this.name = '',
+      this.projects = const [],
+      this.restricted = false,
+      this.type = ''});
+}
+
 class MockImage {
   final String architecture;
   final bool autoUpdate;
@@ -188,6 +203,7 @@ class MockLxdServer {
   StreamSubscription<HttpRequest>? _requestSubscription;
   final _tcpSockets = <Socket, Socket>{};
 
+  final Map<String, MockCertificate> certificates;
   final Map<String, MockImage> images;
   final Map<String, MockInstance> instances;
   final Map<String, MockNetwork> networks;
@@ -199,7 +215,8 @@ class MockLxdServer {
   String get socketPath => _socketPath!;
 
   MockLxdServer(
-      {this.images = const {},
+      {this.certificates = const {},
+      this.images = const {},
       this.instances = const {},
       this.networks = const {},
       this.networkAcls = const {},
@@ -244,6 +261,12 @@ class MockLxdServer {
         path[0] == '1.0' &&
         path[1] == 'certificates') {
       _getCertificates(response);
+    } else if (request.method == 'GET' &&
+        path.length == 3 &&
+        path[0] == '1.0' &&
+        path[1] == 'certificates') {
+      var fingerprint = path[2];
+      _getCertificate(response, fingerprint);
     } else if (request.method == 'GET' &&
         path.length == 2 &&
         path[0] == '1.0' &&
@@ -420,7 +443,23 @@ class MockLxdServer {
   }
 
   void _getCertificates(HttpResponse response) {
-    _writeSyncResponse(response, []);
+    _writeSyncResponse(
+        response,
+        certificates.keys
+            .map((fingerprint) => '/1.0/certificates/$fingerprint')
+            .toList());
+  }
+
+  void _getCertificate(HttpResponse response, String fingerprint) {
+    var certificate = certificates[fingerprint]!;
+    _writeSyncResponse(response, {
+      'certificate': certificate.certificate,
+      'name': certificate.name,
+      'fingerprint': fingerprint,
+      'projects': certificate.projects,
+      'restricted': certificate.restricted,
+      'type': certificate.type,
+    });
   }
 
   void _getImages(HttpResponse response) {
@@ -705,11 +744,37 @@ void main() {
   });
 
   test('get certificates', () async {
-    var lxd = MockLxdServer();
+    var lxd = MockLxdServer(certificates: {
+      '213394bb': MockCertificate(),
+      '3402b8e1': MockCertificate()
+    });
     await lxd.start();
 
     var client = LxdClient(socketPath: lxd.socketPath);
-    /*var certificates = */ await client.getCertificates();
+    var certificates = await client.getCertificates();
+    expect(certificates, equals(['213394bb', '3402b8e1']));
+
+    client.close();
+    await lxd.close();
+  });
+
+  test('get certificate', () async {
+    var lxd = MockLxdServer(certificates: {
+      '213394bb': MockCertificate(
+          certificate: 'CERTIFICATE',
+          name: 'NAME',
+          restricted: true,
+          type: 'TYPE')
+    });
+    await lxd.start();
+
+    var client = LxdClient(socketPath: lxd.socketPath);
+    var certificate = await client.getCertificate('213394bb');
+    expect(certificate.certificate, equals('CERTIFICATE'));
+    expect(certificate.fingerprint, equals('213394bb'));
+    expect(certificate.name, equals('NAME'));
+    expect(certificate.restricted, isTrue);
+    expect(certificate.type, equals('TYPE'));
 
     client.close();
     await lxd.close();

@@ -668,7 +668,7 @@ class LxdClient {
         certificate: certificate['certificate'],
         fingerprint: certificate['fingerprint'],
         name: certificate['name'],
-        projects: certificate['projects'],
+        projects: certificate['projects'].cast<String>(),
         restricted: certificate['restricted'],
         type: certificate['type']);
   }
