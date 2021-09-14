@@ -616,8 +616,9 @@ class MockLxdServer {
   }
 
   void _getOperations(HttpResponse response) {
-    _writeSyncResponse(
-        response, operations.keys.map((id) => '/1.0/operations/$id').toList());
+    _writeSyncResponse(response, {
+      'running': operations.keys.map((id) => '/1.0/operations/$id').toList()
+    });
   }
 
   void _getOperation(HttpResponse response, String id) {
@@ -1349,6 +1350,29 @@ void main() {
     expect(pool.description, equals('Local SSD pool'));
     expect(pool.name, equals('local'));
     expect(pool.status, equals('Created'));
+
+    client.close();
+    await lxd.close();
+  });
+
+  test('get operations', () async {
+    var lxd = MockLxdServer();
+    await lxd.start();
+
+    var client = LxdClient(socketPath: lxd.socketPath);
+    var operation1 = await client.startInstance('test-instance1');
+    var operation2 = await client.startInstance('test-instance2');
+    var operation3 = await client.startInstance('test-instance3');
+
+    var operations = await client.getOperations();
+    expect(
+        operations,
+        equals({
+          'running': [operation1.id, operation2.id, operation3.id]
+        }));
+
+    var operation = await client.getOperation(operation1.id);
+    expect(operation.id, equals(operation1.id));
 
     client.close();
     await lxd.close();
