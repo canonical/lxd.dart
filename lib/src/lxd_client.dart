@@ -6,6 +6,7 @@ import 'package:http/http.dart';
 import 'http_unix_client.dart';
 import 'simplestream_client.dart';
 
+const _certificatePath = '/1.0/certificates/';
 const _instancePath = '/1.0/instances/';
 const _imagePath = '/1.0/images/';
 const _networkPath = '/1.0/networks/';
@@ -647,21 +648,29 @@ class LxdClient {
                 version: motherboardData['version'])));
   }
 
-  /// Gets the certificates provided by the LXD server.
-  Future<List<LxdCertificate>> getCertificates() async {
+  /// Gets the fingerprints of the certificates provided by the LXD server.
+  Future<List<String>> getCertificates() async {
     var certificatePaths = await _requestSync('GET', '/1.0/certificates');
-    var certificates = <LxdCertificate>[];
+    var fingerprints = <String>[];
     for (var path in certificatePaths) {
-      var certificate = await _requestSync('GET', path);
-      certificates.add(LxdCertificate(
-          certificate: certificate['certificate'],
-          fingerprint: certificate['fingerprint'],
-          name: certificate['name'],
-          projects: certificate['projects'],
-          restricted: certificate['restricted'],
-          type: certificate['type']));
+      if (path.startsWith(_certificatePath)) {
+        fingerprints.add(path.substring(_certificatePath.length));
+      }
     }
-    return certificates;
+    return fingerprints;
+  }
+
+  /// Gets information on a certificate with [fingerprint].
+  Future<LxdCertificate> getCertificate(String fingerprint) async {
+    var certificate =
+        await _requestSync('GET', '/1.0/certificates/$fingerprint');
+    return LxdCertificate(
+        certificate: certificate['certificate'],
+        fingerprint: certificate['fingerprint'],
+        name: certificate['name'],
+        projects: certificate['projects'],
+        restricted: certificate['restricted'],
+        type: certificate['type']);
   }
 
   /// Gets the fingerprints of the images provided by the LXD server.
