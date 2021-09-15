@@ -131,35 +131,50 @@ class LxdMemoryResources {
 }
 
 class LxdGpuCard {
-  LxdGpuCard();
+  final String driver;
+  final String driverVersion;
+
+  LxdGpuCard({required this.driver, required this.driverVersion});
 
   @override
   String toString() => 'LxdGpuCard()';
 }
 
-class LxdNetworkDevice {
-  LxdNetworkDevice();
+class LxdNetworkCard {
+  final String driver;
+  final String driverVersion;
+
+  LxdNetworkCard({required this.driver, required this.driverVersion});
 
   @override
-  String toString() => 'LxdNetworkDevice()';
+  String toString() => 'LxdNetworkCard()';
 }
 
-class LxdDisk {
-  LxdDisk();
+class LxdStorageDisk {
+  final int size;
+  final String type;
+
+  LxdStorageDisk({required this.size, required this.type});
 
   @override
-  String toString() => 'LxdDisk()';
+  String toString() => 'LxdStorageDisk()';
 }
 
 class LxdUsbDevice {
-  LxdUsbDevice();
+  final String driver;
+  final String driverVersion;
+
+  LxdUsbDevice({required this.driver, required this.driverVersion});
 
   @override
   String toString() => 'LxdUsbDevice()';
 }
 
 class LxdPciDevice {
-  LxdPciDevice();
+  final String driver;
+  final String driverVersion;
+
+  LxdPciDevice({required this.driver, required this.driverVersion});
 
   @override
   String toString() => 'LxdPciDevice()';
@@ -246,26 +261,26 @@ class LxdSystemResources {
 class LxdResources {
   final LxdCpuResources cpu;
   final LxdMemoryResources memory;
-  final List<LxdGpuCard> gpu;
-  final List<LxdNetworkDevice> network;
-  final List<LxdDisk> storage;
-  final List<LxdUsbDevice> usb;
-  final List<LxdPciDevice> pci;
+  final List<LxdGpuCard> gpuCards;
+  final List<LxdNetworkCard> networkCards;
+  final List<LxdStorageDisk> storageDisks;
+  final List<LxdUsbDevice> usbDevices;
+  final List<LxdPciDevice> pciDevices;
   final LxdSystemResources system;
 
   LxdResources(
       {required this.cpu,
       required this.memory,
-      required this.gpu,
-      required this.network,
-      required this.storage,
-      required this.usb,
-      required this.pci,
+      required this.gpuCards,
+      required this.networkCards,
+      required this.storageDisks,
+      required this.usbDevices,
+      required this.pciDevices,
       required this.system});
 
   @override
   String toString() =>
-      'LxdResources(cpu: $cpu, memory: $memory, gpu: $gpu, network: $network, storage: $storage, usb: $usb, pci: $pci, system: $system)';
+      'LxdResources(cpu: $cpu, memory: $memory, gpuCards: $gpuCards, networkCards: $networkCards, storageDisks: $storageDisks, usbDevices: $usbDevices, pciDevices: $pciDevices, system: $system)';
 }
 
 class LxdCertificate {
@@ -609,20 +624,49 @@ class LxdClient {
     var data = await _requestSync('GET', '/1.0/resources');
     var cpuData = data['cpu'];
     var memoryData = data['memory'];
+    var gpu = data['gpu'];
+    var network = data['network'];
+    var storage = data['storage'];
+    var usb = data['usb'];
+    var pci = data['pci'];
     var systemData = data['system'];
     var firmwareData = systemData['firmware'];
     var chassisData = systemData['chassis'];
     var motherboardData = systemData['motherboard'];
+    var gpuCards = <LxdGpuCard>[];
+    for (var card in gpu['cards']) {
+      gpuCards.add(LxdGpuCard(
+          driver: card['driver'], driverVersion: card['driver_version']));
+    }
+    var networkCards = <LxdNetworkCard>[];
+    for (var card in network['cards']) {
+      networkCards.add(LxdNetworkCard(
+          driver: card['driver'], driverVersion: card['driver_version']));
+    }
+    var storageDisks = <LxdStorageDisk>[];
+    for (var disk in storage['disks']) {
+      storageDisks.add(LxdStorageDisk(size: disk['size'], type: disk['type']));
+    }
+    var usbDevices = <LxdUsbDevice>[];
+    for (var device in usb['devices']) {
+      usbDevices.add(LxdUsbDevice(
+          driver: device['driver'], driverVersion: device['driver_version']));
+    }
+    var pciDevices = <LxdPciDevice>[];
+    for (var device in pci['devices']) {
+      pciDevices.add(LxdPciDevice(
+          driver: device['driver'], driverVersion: device['driver_version']));
+    }
     return LxdResources(
         cpu: LxdCpuResources(
             architecture: cpuData['architecture'], sockets: []), // FIXME
         memory: LxdMemoryResources(
             used: memoryData['used'], total: memoryData['total']),
-        gpu: [], // FIXME
-        network: [], // FIXME
-        storage: [], // FIXME
-        usb: [], // FIXME
-        pci: [], // FIXME
+        gpuCards: gpuCards,
+        networkCards: networkCards,
+        storageDisks: storageDisks,
+        usbDevices: usbDevices,
+        pciDevices: pciDevices,
         system: LxdSystemResources(
             uuid: systemData['uuid'],
             vendor: systemData['vendor'],

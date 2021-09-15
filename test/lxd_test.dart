@@ -467,11 +467,31 @@ class MockLxdServer {
     _writeSyncResponse(response, {
       'cpu': {'architecture': 'arm64'},
       'memory': {'used': 4125806592, 'total': 17179869184},
-      'gpu': {},
-      'network': {},
-      'storage': {},
-      'usb': {},
-      'pci': {},
+      'gpu': {
+        'cards': [
+          {'driver': 'gpu-driver', 'driver_version': '1.0'}
+        ]
+      },
+      'network': {
+        'cards': [
+          {'driver': 'network-driver', 'driver_version': '1.0'}
+        ]
+      },
+      'storage': {
+        'disks': [
+          {'size': 256060514304, 'type': 'nvme'}
+        ]
+      },
+      'usb': {
+        'devices': [
+          {'driver': 'usb-driver', 'driver_version': '1.0'}
+        ]
+      },
+      'pci': {
+        'devices': [
+          {'driver': 'pci-driver', 'driver_version': '1.0'}
+        ]
+      },
       'system': {
         'uuid': 'SYSTEM-UUID',
         'vendor': 'SYSTEM-VENDOR',
@@ -820,7 +840,7 @@ void main() {
     expect(
         resources.toString(),
         equals(
-            'LxdResources(cpu: LxdCpuResources(architecture: arm64, sockets: []), memory: LxdMemoryResources(used: 4125806592, total: 17179869184), gpu: [], network: [], storage: [], usb: [], pci: [], system: LxdSystemResources(uuid: SYSTEM-UUID, vendor: SYSTEM-VENDOR, product: SYSTEM-PRODUCT, family: SYSTEM-FAMILY, version: 1.0, sku: SYSTEM-SKU, serial: SYSTEM-SERIAL, type: physical, firmware: LxdFirmware(date: 10/08/2021, vendor: FIRMWARE-VENDOR, version: 1.0), chassis: LxdChassis(serial: CHASSIS-SERIAL, type: Notebook, vendor: CHASSIS-VENDOR, version: 1.0), motherboar: LxdMotherboard(product: MOTHERBOARD-PRODUCT, serial: MOTHERBOARD-SERIAL, vendor: MOTHERBOARD-VENDOR, version: 1.0)))'));
+            'LxdResources(cpu: LxdCpuResources(architecture: arm64, sockets: []), memory: LxdMemoryResources(used: 4125806592, total: 17179869184), gpuCards: [LxdGpuCard()], networkCards: [LxdNetworkCard()], storageDisks: [LxdStorageDisk()], usbDevices: [LxdUsbDevice()], pciDevices: [LxdPciDevice()], system: LxdSystemResources(uuid: SYSTEM-UUID, vendor: SYSTEM-VENDOR, product: SYSTEM-PRODUCT, family: SYSTEM-FAMILY, version: 1.0, sku: SYSTEM-SKU, serial: SYSTEM-SERIAL, type: physical, firmware: LxdFirmware(date: 10/08/2021, vendor: FIRMWARE-VENDOR, version: 1.0), chassis: LxdChassis(serial: CHASSIS-SERIAL, type: Notebook, vendor: CHASSIS-VENDOR, version: 1.0), motherboar: LxdMotherboard(product: MOTHERBOARD-PRODUCT, serial: MOTHERBOARD-SERIAL, vendor: MOTHERBOARD-VENDOR, version: 1.0)))'));
 
     client.close();
     await lxd.close();
