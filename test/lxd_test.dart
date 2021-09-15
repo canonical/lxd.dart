@@ -200,7 +200,7 @@ class MockOperation {
   final String? error;
   final String id;
   final bool mayCancel;
-  final String status;
+  String status;
   final int statusCode;
   final String updatedAt;
 
@@ -626,10 +626,14 @@ class MockLxdServer {
   }
 
   void _waitOperation(HttpResponse response, String id) {
-    _writeSyncResponse(response, operations[id]!.toJson());
+    var operation = operations[id]!;
+    operation.status = 'done';
+    _writeSyncResponse(response, operation.toJson());
   }
 
   void _deleteOperation(HttpResponse response, String id) {
+    var operation = operations[id]!;
+    operation.status = 'cancelled';
     _writeSyncResponse(response, {});
   }
 
@@ -1373,6 +1377,22 @@ void main() {
 
     var operation = await client.getOperation(operation1.id);
     expect(operation.id, equals(operation1.id));
+
+    client.close();
+    await lxd.close();
+  });
+
+  test('cancel operation', () async {
+    var lxd = MockLxdServer();
+    await lxd.start();
+
+    var client = LxdClient(socketPath: lxd.socketPath);
+    var operation = await client.startInstance('test-instance1');
+
+    await client.cancelOperation(operation.id);
+
+    operation = await client.getOperation(operation.id);
+    expect(operation.status, equals('cancelled'));
 
     client.close();
     await lxd.close();
