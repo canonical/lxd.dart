@@ -817,6 +817,10 @@ void main() {
     expect(resources.system.motherboard.serial, equals('MOTHERBOARD-SERIAL'));
     expect(resources.system.motherboard.vendor, equals('MOTHERBOARD-VENDOR'));
     expect(resources.system.motherboard.version, equals('1.0'));
+    expect(
+        resources.toString(),
+        equals(
+            'LxdResources(cpu: LxdCpuResources(architecture: arm64, sockets: []), memory: LxdMemoryResources(used: 4125806592, total: 17179869184), gpu: [], network: [], storage: [], usb: [], pci: [], system: LxdSystemResources(uuid: SYSTEM-UUID, vendor: SYSTEM-VENDOR, product: SYSTEM-PRODUCT, family: SYSTEM-FAMILY, version: 1.0, sku: SYSTEM-SKU, serial: SYSTEM-SERIAL, type: physical, firmware: LxdFirmware(date: 10/08/2021, vendor: FIRMWARE-VENDOR, version: 1.0), chassis: LxdChassis(serial: CHASSIS-SERIAL, type: Notebook, vendor: CHASSIS-VENDOR, version: 1.0), motherboar: LxdMotherboard(product: MOTHERBOARD-PRODUCT, serial: MOTHERBOARD-SERIAL, vendor: MOTHERBOARD-VENDOR, version: 1.0)))'));
 
     client.close();
     await lxd.close();
