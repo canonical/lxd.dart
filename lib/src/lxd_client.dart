@@ -188,7 +188,7 @@ class LxdUsbDevice {
   final int deviceAddress;
   final String product;
   final String productId;
-  final int speed;
+  final double speed;
   final String vendor;
   final String vendorId;
 
@@ -725,7 +725,7 @@ class LxdClient {
           deviceAddress: device['device_address'],
           product: device['product'],
           productId: device['product_id'],
-          speed: device['speed'],
+          speed: device['speed'].toDouble(),
           vendor: device['vendor'],
           vendorId: device['vendor_id']));
     }
