@@ -469,27 +469,59 @@ class MockLxdServer {
       'memory': {'used': 4125806592, 'total': 17179869184},
       'gpu': {
         'cards': [
-          {'driver': 'gpu-driver', 'driver_version': '1.0'}
+          {
+            'driver': 'i915',
+            'driver_version': '5.8.0-36-generic',
+            'vendor': 'Intel Corporation',
+            'vendor_id': '8086'
+          }
         ]
       },
       'network': {
         'cards': [
-          {'driver': 'network-driver', 'driver_version': '1.0'}
+          {
+            'driver': 'atlantic',
+            'driver_version': '5.8.0-36-generic',
+            'vendor': 'Aquantia Corp.',
+            'vendor_id': '1d6a'
+          }
         ]
       },
       'storage': {
         'disks': [
-          {'size': 256060514304, 'type': 'nvme'}
+          {
+            'id': 'nvme0n1',
+            'model': 'INTEL SSDPEKKW256G7',
+            'serial': 'BTPY63440ARH256D',
+            'size': 256060514304,
+            'type': 'nvme'
+          }
         ]
       },
       'usb': {
         'devices': [
-          {'driver': 'usb-driver', 'driver_version': '1.0'}
+          {
+            'bus_address': 1,
+            'device_address': 3,
+            'product': 'Hermon USB hidmouse Device',
+            'product_id': '2221',
+            'speed': 12,
+            'vendor': 'ATEN International Co., Ltd',
+            'vendor_id': '0557'
+          }
         ]
       },
       'pci': {
         'devices': [
-          {'driver': 'pci-driver', 'driver_version': '1.0'}
+          {
+            'driver': 'mgag200',
+            'driver_version': '5.8.0-36-generic',
+            'pci_address': '0000:07:03.0',
+            'product': 'MGA G200eW WPCM450',
+            'product_id': '0532',
+            'vendor': 'Matrox Electronics Systems Ltd.',
+            'vendor_id': '102b'
+          }
         ]
       },
       'system': {
@@ -840,7 +872,7 @@ void main() {
     expect(
         resources.toString(),
         equals(
-            'LxdResources(cpu: LxdCpuResources(architecture: arm64, sockets: []), memory: LxdMemoryResources(used: 4125806592, total: 17179869184), gpuCards: [LxdGpuCard()], networkCards: [LxdNetworkCard()], storageDisks: [LxdStorageDisk()], usbDevices: [LxdUsbDevice()], pciDevices: [LxdPciDevice()], system: LxdSystemResources(uuid: SYSTEM-UUID, vendor: SYSTEM-VENDOR, product: SYSTEM-PRODUCT, family: SYSTEM-FAMILY, version: 1.0, sku: SYSTEM-SKU, serial: SYSTEM-SERIAL, type: physical, firmware: LxdFirmware(date: 10/08/2021, vendor: FIRMWARE-VENDOR, version: 1.0), chassis: LxdChassis(serial: CHASSIS-SERIAL, type: Notebook, vendor: CHASSIS-VENDOR, version: 1.0), motherboar: LxdMotherboard(product: MOTHERBOARD-PRODUCT, serial: MOTHERBOARD-SERIAL, vendor: MOTHERBOARD-VENDOR, version: 1.0)))'));
+            'LxdResources(cpu: LxdCpuResources(architecture: arm64, sockets: []), memory: LxdMemoryResources(used: 4125806592, total: 17179869184), gpuCards: [LxdGpuCard(driver: i915, driverVersion: 5.8.0-36-generic, vendor: Intel Corporation, vendorId: 8086)], networkCards: [LxdNetworkCard(driver: atlantic, driverVersion: 5.8.0-36-generic, vendor: Aquantia Corp., vendorId: 1d6a)], storageDisks: [LxdStorageDisk(id: nvme0n1, model: INTEL SSDPEKKW256G7, serial: BTPY63440ARH256D, size: 256060514304, type: nvme)], usbDevices: [LxdUsbDevice(busAddress: 1, deviceAddress: 3, product: Hermon USB hidmouse Device, productId: 2221, speed: 12, vendor: ATEN International Co., Ltd, vendorId: 0557)], pciDevices: [LxdPciDevice(driver: mgag200, driverVersion: 5.8.0-36-generic, pciAddress: 0000:07:03.0, product: MGA G200eW WPCM450, productId: 0532, vendor: Matrox Electronics Systems Ltd., vendorId: 102b)], system: LxdSystemResources(uuid: SYSTEM-UUID, vendor: SYSTEM-VENDOR, product: SYSTEM-PRODUCT, family: SYSTEM-FAMILY, version: 1.0, sku: SYSTEM-SKU, serial: SYSTEM-SERIAL, type: physical, firmware: LxdFirmware(date: 10/08/2021, vendor: FIRMWARE-VENDOR, version: 1.0), chassis: LxdChassis(serial: CHASSIS-SERIAL, type: Notebook, vendor: CHASSIS-VENDOR, version: 1.0), motherboar: LxdMotherboard(product: MOTHERBOARD-PRODUCT, serial: MOTHERBOARD-SERIAL, vendor: MOTHERBOARD-VENDOR, version: 1.0)))'));
 
     client.close();
     await lxd.close();

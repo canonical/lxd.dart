@@ -133,51 +133,100 @@ class LxdMemoryResources {
 class LxdGpuCard {
   final String driver;
   final String driverVersion;
+  final String vendor;
+  final String vendorId;
 
-  LxdGpuCard({required this.driver, required this.driverVersion});
+  LxdGpuCard(
+      {required this.driver,
+      required this.driverVersion,
+      required this.vendor,
+      required this.vendorId});
 
   @override
-  String toString() => 'LxdGpuCard()';
+  String toString() =>
+      'LxdGpuCard(driver: $driver, driverVersion: $driverVersion, vendor: $vendor, vendorId: $vendorId)';
 }
 
 class LxdNetworkCard {
   final String driver;
   final String driverVersion;
+  final String vendor;
+  final String vendorId;
 
-  LxdNetworkCard({required this.driver, required this.driverVersion});
+  LxdNetworkCard(
+      {required this.driver,
+      required this.driverVersion,
+      required this.vendor,
+      required this.vendorId});
 
   @override
-  String toString() => 'LxdNetworkCard()';
+  String toString() =>
+      'LxdNetworkCard(driver: $driver, driverVersion: $driverVersion, vendor: $vendor, vendorId: $vendorId)';
 }
 
 class LxdStorageDisk {
+  final String id;
+  final String model;
+  final String serial;
   final int size;
   final String type;
 
-  LxdStorageDisk({required this.size, required this.type});
+  LxdStorageDisk(
+      {required this.id,
+      required this.model,
+      required this.serial,
+      required this.size,
+      required this.type});
 
   @override
-  String toString() => 'LxdStorageDisk()';
+  String toString() =>
+      'LxdStorageDisk(id: $id, model: $model, serial: $serial, size: $size, type: $type)';
 }
 
 class LxdUsbDevice {
-  final String driver;
-  final String driverVersion;
+  final int busAddress;
+  final int deviceAddress;
+  final String product;
+  final String productId;
+  final int speed;
+  final String vendor;
+  final String vendorId;
 
-  LxdUsbDevice({required this.driver, required this.driverVersion});
+  LxdUsbDevice(
+      {required this.busAddress,
+      required this.deviceAddress,
+      required this.product,
+      required this.productId,
+      required this.speed,
+      required this.vendor,
+      required this.vendorId});
 
   @override
-  String toString() => 'LxdUsbDevice()';
+  String toString() =>
+      'LxdUsbDevice(busAddress: $busAddress, deviceAddress: $deviceAddress, product: $product, productId: $productId, speed: $speed, vendor: $vendor, vendorId: $vendorId)';
 }
 
 class LxdPciDevice {
   final String driver;
   final String driverVersion;
+  final String pciAddress;
+  final String product;
+  final String productId;
+  final String vendor;
+  final String vendorId;
 
-  LxdPciDevice({required this.driver, required this.driverVersion});
+  LxdPciDevice(
+      {required this.driver,
+      required this.driverVersion,
+      required this.pciAddress,
+      required this.product,
+      required this.productId,
+      required this.vendor,
+      required this.vendorId});
 
   @override
-  String toString() => 'LxdPciDevice()';
+  String toString() =>
+      'LxdPciDevice(driver: $driver, driverVersion: $driverVersion, pciAddress: $pciAddress, product: $product, productId: $productId, vendor: $vendor, vendorId: $vendorId)';
 }
 
 class LxdFirmware {
@@ -626,9 +675,9 @@ class LxdClient {
     var memoryData = data['memory'];
     var gpu = data['gpu'];
     var network = data['network'];
+    var pci = data['pci'];
     var storage = data['storage'];
     var usb = data['usb'];
-    var pci = data['pci'];
     var systemData = data['system'];
     var firmwareData = systemData['firmware'];
     var chassisData = systemData['chassis'];
@@ -636,26 +685,49 @@ class LxdClient {
     var gpuCards = <LxdGpuCard>[];
     for (var card in gpu['cards']) {
       gpuCards.add(LxdGpuCard(
-          driver: card['driver'], driverVersion: card['driver_version']));
+          driver: card['driver'],
+          driverVersion: card['driver_version'],
+          vendor: card['vendor'],
+          vendorId: card['vendor_id']));
     }
     var networkCards = <LxdNetworkCard>[];
     for (var card in network['cards']) {
       networkCards.add(LxdNetworkCard(
-          driver: card['driver'], driverVersion: card['driver_version']));
-    }
-    var storageDisks = <LxdStorageDisk>[];
-    for (var disk in storage['disks']) {
-      storageDisks.add(LxdStorageDisk(size: disk['size'], type: disk['type']));
-    }
-    var usbDevices = <LxdUsbDevice>[];
-    for (var device in usb['devices']) {
-      usbDevices.add(LxdUsbDevice(
-          driver: device['driver'], driverVersion: device['driver_version']));
+          driver: card['driver'],
+          driverVersion: card['driver_version'],
+          vendor: card['vendor'],
+          vendorId: card['vendor_id']));
     }
     var pciDevices = <LxdPciDevice>[];
     for (var device in pci['devices']) {
       pciDevices.add(LxdPciDevice(
-          driver: device['driver'], driverVersion: device['driver_version']));
+          driver: device['driver'],
+          driverVersion: device['driver_version'],
+          pciAddress: device['pci_address'],
+          product: device['product'],
+          productId: device['product_id'],
+          vendor: device['vendor'],
+          vendorId: device['vendor_id']));
+    }
+    var storageDisks = <LxdStorageDisk>[];
+    for (var disk in storage['disks']) {
+      storageDisks.add(LxdStorageDisk(
+          id: disk['id'],
+          model: disk['model'],
+          serial: disk['serial'],
+          size: disk['size'],
+          type: disk['type']));
+    }
+    var usbDevices = <LxdUsbDevice>[];
+    for (var device in usb['devices']) {
+      usbDevices.add(LxdUsbDevice(
+          busAddress: device['bus_address'],
+          deviceAddress: device['device_address'],
+          product: device['product'],
+          productId: device['product_id'],
+          speed: device['speed'],
+          vendor: device['vendor'],
+          vendorId: device['vendor_id']));
     }
     return LxdResources(
         cpu: LxdCpuResources(
@@ -664,9 +736,9 @@ class LxdClient {
             used: memoryData['used'], total: memoryData['total']),
         gpuCards: gpuCards,
         networkCards: networkCards,
+        pciDevices: pciDevices,
         storageDisks: storageDisks,
         usbDevices: usbDevices,
-        pciDevices: pciDevices,
         system: LxdSystemResources(
             uuid: systemData['uuid'],
             vendor: systemData['vendor'],
