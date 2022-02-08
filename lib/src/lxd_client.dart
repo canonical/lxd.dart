@@ -483,6 +483,10 @@ class LxdNetworkAddress {
       other.family == family &&
       other.netmask == netmask &&
       other.scope == scope;
+
+  @override
+  int get hashCode =>
+      address.hashCode | family.hashCode | netmask.hashCode | scope.hashCode;
 }
 
 class LxdNetworkCounters {
