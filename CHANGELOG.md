@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.5
+
+* Only list as supporting Linux.
+* Update getCertificates() to match other similar methods.
+* Decode more resource information.
+* Fix USB device speed being an int or a double.
+* Add example of using getResources.
+
 ## 0.0.4
 
 * Simplify getting remote images.
