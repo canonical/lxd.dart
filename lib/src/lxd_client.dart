@@ -203,6 +203,20 @@ class LxdGpuCard {
   @override
   String toString() =>
       'LxdGpuCard(driver: $driver, driverVersion: $driverVersion, vendor: $vendor, vendorId: $vendorId)';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is LxdGpuCard &&
+        other.driver == driver &&
+        other.driverVersion == driverVersion &&
+        other.vendor == vendor &&
+        other.vendorId == vendorId;
+  }
+
+  @override
+  int get hashCode => Object.hash(driver, driverVersion, vendor, vendorId);
 }
 
 class LxdNetworkCard {
