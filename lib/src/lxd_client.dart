@@ -355,6 +355,33 @@ class LxdPciDevice {
   @override
   String toString() =>
       'LxdPciDevice(driver: $driver, driverVersion: $driverVersion, pciAddress: $pciAddress, product: $product, productId: $productId, vendor: $vendor, vendorId: $vendorId)';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is LxdPciDevice &&
+        other.driver == driver &&
+        other.driverVersion == driverVersion &&
+        other.pciAddress == pciAddress &&
+        other.product == product &&
+        other.productId == productId &&
+        other.vendor == vendor &&
+        other.vendorId == vendorId;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      driver,
+      driverVersion,
+      pciAddress,
+      product,
+      productId,
+      vendor,
+      vendorId,
+    );
+  }
 }
 
 class LxdFirmware {
