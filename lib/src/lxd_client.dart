@@ -891,16 +891,18 @@ class LxdNetworkAddress {
       'LxdNetworkAddress(address: $address, family: $family, netmask: $netmask, scope: $scope)';
 
   @override
-  bool operator ==(other) =>
-      other is LxdNetworkAddress &&
-      other.address == address &&
-      other.family == family &&
-      other.netmask == netmask &&
-      other.scope == scope;
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is LxdNetworkAddress &&
+        other.address == address &&
+        other.family == family &&
+        other.netmask == netmask &&
+        other.scope == scope;
+  }
 
   @override
-  int get hashCode =>
-      address.hashCode | family.hashCode | netmask.hashCode | scope.hashCode;
+  int get hashCode => Object.hash(address, family, netmask, scope);
 }
 
 class LxdNetworkCounters {
