@@ -846,6 +846,32 @@ class LxdNetwork {
   @override
   String toString() =>
       "LxdNetwork(config: $config, description: '$description', managed: $managed, name: $name, status: $status, type: $type)";
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    final mapEquals = const DeepCollectionEquality().equals;
+
+    return other is LxdNetwork &&
+        mapEquals(other.config, config) &&
+        other.description == description &&
+        other.managed == managed &&
+        other.name == name &&
+        other.status == status &&
+        other.type == type;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      config,
+      description,
+      managed,
+      name,
+      status,
+      type,
+    );
+  }
 }
 
 class LxdNetworkAddress {
