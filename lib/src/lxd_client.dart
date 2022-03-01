@@ -305,6 +305,33 @@ class LxdUsbDevice {
   @override
   String toString() =>
       'LxdUsbDevice(busAddress: $busAddress, deviceAddress: $deviceAddress, product: $product, productId: $productId, speed: $speed, vendor: $vendor, vendorId: $vendorId)';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is LxdUsbDevice &&
+        other.busAddress == busAddress &&
+        other.deviceAddress == deviceAddress &&
+        other.product == product &&
+        other.productId == productId &&
+        other.speed == speed &&
+        other.vendor == vendor &&
+        other.vendorId == vendorId;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      busAddress,
+      deviceAddress,
+      product,
+      productId,
+      speed,
+      vendor,
+      vendorId,
+    );
+  }
 }
 
 class LxdPciDevice {
