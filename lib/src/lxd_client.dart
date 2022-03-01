@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:collection/collection.dart';
 import 'package:http/http.dart';
 
 import 'http_unix_client.dart';
@@ -107,6 +108,38 @@ class LxdOperation {
   @override
   String toString() =>
       'LxdOperation(createdAt: $createdAt, description: $description, error: $error, id: $id, instanceNames: $instanceNames, mayCancel: $mayCancel, status: $status, statusCode: $statusCode, updatedAt: $updatedAt)';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    final listEquals = const DeepCollectionEquality().equals;
+
+    return other is LxdOperation &&
+        other.createdAt == createdAt &&
+        other.description == description &&
+        other.error == error &&
+        other.id == id &&
+        listEquals(other.instanceNames, instanceNames) &&
+        other.mayCancel == mayCancel &&
+        other.status == status &&
+        other.statusCode == statusCode &&
+        other.updatedAt == updatedAt;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      createdAt,
+      description,
+      error,
+      id,
+      instanceNames,
+      mayCancel,
+      status,
+      statusCode,
+      updatedAt,
+    );
+  }
 }
 
 class LxdCpuResources {
