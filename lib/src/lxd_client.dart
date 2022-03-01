@@ -267,6 +267,21 @@ class LxdStorageDisk {
   @override
   String toString() =>
       'LxdStorageDisk(id: $id, model: $model, serial: $serial, size: $size, type: $type)';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is LxdStorageDisk &&
+        other.id == id &&
+        other.model == model &&
+        other.serial == serial &&
+        other.size == size &&
+        other.type == type;
+  }
+
+  @override
+  int get hashCode => Object.hash(id, model, serial, size, type);
 }
 
 class LxdUsbDevice {
