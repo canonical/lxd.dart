@@ -1122,6 +1122,21 @@ class LxdStoragePool {
   @override
   String toString() =>
       "LxdStoragePool(config: $config, description: '$description', name: $name, status: $status)";
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    final mapEquals = const DeepCollectionEquality().equals;
+
+    return other is LxdStoragePool &&
+        mapEquals(other.config, config) &&
+        other.description == description &&
+        other.name == name &&
+        other.status == status;
+  }
+
+  @override
+  int get hashCode => Object.hash(config, description, name, status);
 }
 
 enum LxdRemoteImageType { container, virtualMachine }
