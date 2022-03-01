@@ -456,6 +456,20 @@ class LxdMotherboard {
   @override
   String toString() =>
       'LxdMotherboard(product: $product, serial: $serial, vendor: $vendor, version: $version)';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is LxdMotherboard &&
+        other.product == product &&
+        other.serial == serial &&
+        other.vendor == vendor &&
+        other.version == version;
+  }
+
+  @override
+  int get hashCode => Object.hash(product, serial, vendor, version);
 }
 
 class LxdSystemResources {
