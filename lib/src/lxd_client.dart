@@ -810,6 +810,21 @@ class LxdInstanceState {
   @override
   String toString() =>
       'LxdInstanceState(network: $network, pid: $pid, status: $status, statusCode: $statusCode)';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    final mapEquals = const DeepCollectionEquality().equals;
+
+    return other is LxdInstanceState &&
+        mapEquals(other.network, network) &&
+        other.pid == pid &&
+        other.status == status &&
+        other.statusCode == statusCode;
+  }
+
+  @override
+  int get hashCode => Object.hash(network, pid, status, statusCode);
 }
 
 class LxdNetwork {
