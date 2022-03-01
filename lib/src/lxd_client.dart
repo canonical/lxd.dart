@@ -676,6 +676,48 @@ class LxdImage {
   @override
   String toString() =>
       'LxdImage(architecture: $architecture, autoUpdate: $autoUpdate, cached: $cached, createdAt: $createdAt, expiresAt: $expiresAt, filename: $filename, fingerprint: $fingerprint, lastUsedAt: $lastUsedAt, profiles: $profiles, properties: $properties, public: $public, size: $size, type: $type, uploadedAt: $uploadedAt)';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    final collectionEquals = const DeepCollectionEquality().equals;
+
+    return other is LxdImage &&
+        other.architecture == architecture &&
+        other.autoUpdate == autoUpdate &&
+        other.cached == cached &&
+        other.createdAt == createdAt &&
+        other.expiresAt == expiresAt &&
+        other.filename == filename &&
+        other.fingerprint == fingerprint &&
+        other.lastUsedAt == lastUsedAt &&
+        collectionEquals(other.profiles, profiles) &&
+        collectionEquals(other.properties, properties) &&
+        other.public == public &&
+        other.size == size &&
+        other.type == type &&
+        other.uploadedAt == uploadedAt;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      architecture,
+      autoUpdate,
+      cached,
+      createdAt,
+      expiresAt,
+      filename,
+      fingerprint,
+      lastUsedAt,
+      profiles,
+      properties,
+      public,
+      size,
+      type,
+      uploadedAt,
+    );
+  }
 }
 
 class LxdInstance {
