@@ -425,6 +425,20 @@ class LxdChassis {
   @override
   String toString() =>
       'LxdChassis(serial: $serial, type: $type, vendor: $vendor, version: $version)';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is LxdChassis &&
+        other.serial == serial &&
+        other.type == type &&
+        other.vendor == vendor &&
+        other.version == version;
+  }
+
+  @override
+  int get hashCode => Object.hash(serial, type, vendor, version);
 }
 
 class LxdMotherboard {
