@@ -1162,6 +1162,34 @@ class LxdRemoteImage {
   @override
   String toString() =>
       'LxdRemoteImage(architecture: $architecture, aliases: $aliases, description: $description, fingerprint: $fingerprint, size: $size, type: $type, url: $url)';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    final setEquals = const DeepCollectionEquality().equals;
+
+    return other is LxdRemoteImage &&
+        other.architecture == architecture &&
+        other.description == description &&
+        setEquals(other.aliases, aliases) &&
+        other.fingerprint == fingerprint &&
+        other.size == size &&
+        other.type == type &&
+        other.url == url;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      architecture,
+      description,
+      aliases,
+      fingerprint,
+      size,
+      type,
+      url,
+    );
+  }
 }
 
 /// Manages a connection to the lxd server.
