@@ -174,6 +174,18 @@ class LxdMemoryResources {
 
   @override
   String toString() => 'LxdMemoryResources(used: $used, total: $total)';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is LxdMemoryResources &&
+        other.used == used &&
+        other.total == total;
+  }
+
+  @override
+  int get hashCode => Object.hash(used, total);
 }
 
 class LxdGpuCard {
