@@ -501,6 +501,41 @@ class LxdSystemResources {
   @override
   String toString() =>
       'LxdSystemResources(uuid: $uuid, vendor: $vendor, product: $product, family: $family, version: $version, sku: $sku, serial: $serial, type: $type, firmware: $firmware, chassis: $chassis, motherboard: $motherboard)';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is LxdSystemResources &&
+        other.uuid == uuid &&
+        other.vendor == vendor &&
+        other.product == product &&
+        other.family == family &&
+        other.version == version &&
+        other.sku == sku &&
+        other.serial == serial &&
+        other.type == type &&
+        other.firmware == firmware &&
+        other.chassis == chassis &&
+        other.motherboard == motherboard;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      uuid,
+      vendor,
+      product,
+      family,
+      version,
+      sku,
+      serial,
+      type,
+      firmware,
+      chassis,
+      motherboard,
+    );
+  }
 }
 
 class LxdResources {
