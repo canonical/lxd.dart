@@ -561,6 +561,36 @@ class LxdResources {
   @override
   String toString() =>
       'LxdResources(cpu: $cpu, memory: $memory, gpuCards: $gpuCards, networkCards: $networkCards, storageDisks: $storageDisks, usbDevices: $usbDevices, pciDevices: $pciDevices, system: $system)';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    final listEquals = const DeepCollectionEquality().equals;
+
+    return other is LxdResources &&
+        other.cpu == cpu &&
+        other.memory == memory &&
+        listEquals(other.gpuCards, gpuCards) &&
+        listEquals(other.networkCards, networkCards) &&
+        listEquals(other.storageDisks, storageDisks) &&
+        listEquals(other.usbDevices, usbDevices) &&
+        listEquals(other.pciDevices, pciDevices) &&
+        other.system == system;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      cpu,
+      memory,
+      gpuCards,
+      networkCards,
+      storageDisks,
+      usbDevices,
+      pciDevices,
+      system,
+    );
+  }
 }
 
 class LxdCertificate {
