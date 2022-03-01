@@ -753,6 +753,46 @@ class LxdInstance {
   @override
   String toString() =>
       "LxdInstance(architecture: $architecture, config: $config, createdAt: $createdAt, description: '$description', ephemeral: $ephemeral, lastUsedAt: $lastUsedAt, location: $location, name: $name, profiles: $profiles, stateful: $stateful, status: $status, statusCode: $statusCode, type: $type)";
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    final collectionEquals = const DeepCollectionEquality().equals;
+
+    return other is LxdInstance &&
+        other.architecture == architecture &&
+        collectionEquals(other.config, config) &&
+        other.createdAt == createdAt &&
+        other.description == description &&
+        other.ephemeral == ephemeral &&
+        other.lastUsedAt == lastUsedAt &&
+        other.location == location &&
+        other.name == name &&
+        collectionEquals(other.profiles, profiles) &&
+        other.stateful == stateful &&
+        other.status == status &&
+        other.statusCode == statusCode &&
+        other.type == type;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      architecture,
+      config,
+      createdAt,
+      description,
+      ephemeral,
+      lastUsedAt,
+      location,
+      name,
+      profiles,
+      stateful,
+      status,
+      statusCode,
+      type,
+    );
+  }
 }
 
 class LxdInstanceState {
