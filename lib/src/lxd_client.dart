@@ -916,6 +916,25 @@ class LxdNetworkCounters {
       required this.bytesSent,
       required this.packetsReceived,
       required this.packetsSent});
+
+  @override
+  String toString() =>
+      'LxdNetworkCounters(bytesReceived: $bytesReceived, bytesSent: $bytesSent, packetsReceived: $packetsReceived, packetsSent: $packetsSent)';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is LxdNetworkCounters &&
+        other.bytesReceived == bytesReceived &&
+        other.bytesSent == bytesSent &&
+        other.packetsReceived == packetsReceived &&
+        other.packetsSent == packetsSent;
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(bytesReceived, bytesSent, packetsReceived, packetsSent);
 }
 
 class LxdNetworkState {
