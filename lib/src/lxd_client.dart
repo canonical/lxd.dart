@@ -1091,6 +1091,20 @@ class LxdProject {
   @override
   String toString() =>
       "LxdProject(config: $config, description: '$description', name: $name)";
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    final mapEquals = const DeepCollectionEquality().equals;
+
+    return other is LxdProject &&
+        mapEquals(other.config, config) &&
+        other.description == description &&
+        other.name == name;
+  }
+
+  @override
+  int get hashCode => Object.hash(config, description, name);
 }
 
 class LxdStoragePool {
