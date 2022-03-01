@@ -1001,6 +1001,29 @@ class LxdNetworkLease {
   @override
   String toString() =>
       'LxdNetworkLease(address: $address, hostname: $hostname, hwaddr: $hwaddr, location: $location, type: $type)';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is LxdNetworkLease &&
+        other.address == address &&
+        other.hostname == hostname &&
+        other.hwaddr == hwaddr &&
+        other.location == location &&
+        other.type == type;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      address,
+      hostname,
+      hwaddr,
+      location,
+      type,
+    );
+  }
 }
 
 class LxdNetworkAcl {
