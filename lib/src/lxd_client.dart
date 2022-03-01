@@ -608,6 +608,36 @@ class LxdCertificate {
       required this.projects,
       required this.restricted,
       required this.type});
+
+  @override
+  String toString() =>
+      'LxdCertificate(certificate: $certificate, fingerprint: $fingerprint, name: $name, projects: $projects, restricted: $restricted, type: $type)';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    final listEquals = const DeepCollectionEquality().equals;
+
+    return other is LxdCertificate &&
+        other.certificate == certificate &&
+        other.fingerprint == fingerprint &&
+        other.name == name &&
+        listEquals(other.projects, projects) &&
+        other.restricted == restricted &&
+        other.type == type;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      certificate,
+      fingerprint,
+      name,
+      projects,
+      restricted,
+      type,
+    );
+  }
 }
 
 class LxdImage {
