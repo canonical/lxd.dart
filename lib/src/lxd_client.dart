@@ -955,7 +955,33 @@ class LxdNetworkState {
 
   @override
   String toString() =>
-      'LxdNetworkState(addresses: $addresses, hwaddr: $hwaddr, mtu: $mtu, state: $state, type: $type)';
+      'LxdNetworkState(addresses: $addresses, counters: $counters, hwaddr: $hwaddr, mtu: $mtu, state: $state, type: $type)';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    final listEquals = const DeepCollectionEquality().equals;
+
+    return other is LxdNetworkState &&
+        listEquals(other.addresses, addresses) &&
+        other.counters == counters &&
+        other.hwaddr == hwaddr &&
+        other.mtu == mtu &&
+        other.state == state &&
+        other.type == type;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      addresses,
+      counters,
+      hwaddr,
+      mtu,
+      state,
+      type,
+    );
+  }
 }
 
 class LxdNetworkLease {
