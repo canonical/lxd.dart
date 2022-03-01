@@ -395,6 +395,19 @@ class LxdFirmware {
   @override
   String toString() =>
       'LxdFirmware(date: $date, vendor: $vendor, version: $version)';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is LxdFirmware &&
+        other.date == date &&
+        other.vendor == vendor &&
+        other.version == version;
+  }
+
+  @override
+  int get hashCode => Object.hash(date, vendor, version);
 }
 
 class LxdChassis {
