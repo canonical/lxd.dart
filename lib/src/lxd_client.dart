@@ -151,6 +151,19 @@ class LxdCpuResources {
   @override
   String toString() =>
       'LxdCpuResources(architecture: $architecture, sockets: $sockets)';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    final listEquals = const DeepCollectionEquality().equals;
+
+    return other is LxdCpuResources &&
+        other.architecture == architecture &&
+        listEquals(other.sockets, sockets);
+  }
+
+  @override
+  int get hashCode => Object.hash(architecture, sockets);
 }
 
 class LxdMemoryResources {
