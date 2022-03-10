@@ -1,9 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:http/http.dart';
-
-import 'http_unix_client.dart';
 import 'lxd_types.dart';
 import 'simplestream_client.dart';
 
@@ -85,15 +82,32 @@ class _LxdErrorResponse extends _LxdResponse {
 
 /// Manages a connection to the lxd server.
 class LxdClient {
-  HttpUnixClient? _client;
+  final HttpClient _client;
   String? _userAgent;
-  final String? _socketPath;
 
   dynamic _hostInfo;
 
   LxdClient({String userAgent = 'lxd.dart', String? socketPath})
-      : _userAgent = userAgent,
-        _socketPath = socketPath;
+      : _client = HttpClient(),
+        _userAgent = userAgent {
+    _client.connectionFactory =
+        (Uri uri, String? proxyHost, int? proxyPort) async {
+      if (socketPath == null) {
+        var lxdDir = Platform.environment['LXD_DIR'];
+        var snapSocketPath = '/var/snap/lxd/common/lxd/unix.socket';
+        if (lxdDir != null) {
+          socketPath = lxdDir + '/unix.socket';
+        } else if (await File(snapSocketPath).exists()) {
+          socketPath = snapSocketPath;
+        } else {
+          socketPath = '/var/lib/lxd/unix.socket';
+        }
+      }
+      var address =
+          InternetAddress(socketPath!, type: InternetAddressType.unix);
+      return Socket.startConnect(address, 0);
+    };
+  }
 
   /// Sets the user agent sent in requests to lxd.
   set userAgent(String? value) => _userAgent = value;
@@ -653,34 +667,11 @@ class LxdClient {
 
   /// Terminates all active connections. If a client remains unclosed, the Dart process may not terminate.
   void close() {
-    _client?.close();
+    _client.close();
   }
 
   Future<void> _connect() async {
     _hostInfo ??= await _requestSync('GET', '/1.0');
-  }
-
-  /// Get the HTTP client to communicate with lxd.
-  Future<HttpUnixClient> _getClient() async {
-    if (_client != null) {
-      return _client!;
-    }
-
-    var socketPath = _socketPath;
-    if (socketPath == null) {
-      var lxdDir = Platform.environment['LXD_DIR'];
-      var snapSocketPath = '/var/snap/lxd/common/lxd/unix.socket';
-      if (lxdDir != null) {
-        socketPath = lxdDir + '/unix.socket';
-      } else if (await File(snapSocketPath).exists()) {
-        socketPath = snapSocketPath;
-      } else {
-        socketPath = '/var/lib/lxd/unix.socket';
-      }
-    }
-
-    _client = HttpUnixClient(socketPath);
-    return _client!;
   }
 
   /// Does a synchronous request to lxd.
@@ -690,11 +681,11 @@ class LxdClient {
     if (method != 'GET' || path != '/1.0') {
       await _connect();
     }
-    var client = await _getClient();
-    var request = Request(method, Uri.http('localhost', path, queryParameters));
+    var request = await _client.openUrl(
+        method, Uri.http('localhost', path, queryParameters));
     _setHeaders(request);
-    var response = await client.send(request);
-    var lxdResponse = await _parseResponse(response);
+    await request.close();
+    var lxdResponse = await _parseResponse(await request.done);
     return lxdResponse.result;
   }
 
@@ -702,26 +693,25 @@ class LxdClient {
   Future<dynamic> _requestAsync(String method, String path,
       [dynamic body]) async {
     await _connect();
-    var client = await _getClient();
-    var request = Request(method, Uri.http('localhost', path));
+    var request = await _client.openUrl(method, Uri.http('localhost', path));
     _setHeaders(request);
-    request.headers['Content-Type'] = 'application/json';
-    request.bodyBytes = utf8.encode(json.encode(body));
-    var response = await client.send(request);
-    var lxdResponse = await _parseResponse(response);
+    request.headers.contentType = ContentType('application', 'json');
+    request.write(json.encode(body));
+    await request.close();
+    var lxdResponse = await _parseResponse(await request.done);
     return lxdResponse.operation;
   }
 
   /// Makes base HTTP headers to send.
-  void _setHeaders(Request request) {
+  void _setHeaders(HttpClientRequest request) {
     if (_userAgent != null) {
-      request.headers['User-Agent'] = _userAgent!;
+      request.headers.set(HttpHeaders.userAgentHeader, _userAgent!);
     }
   }
 
   /// Decodes a response from lxd.
-  Future<_LxdResponse> _parseResponse(StreamedResponse response) async {
-    var body = await response.stream.bytesToString();
+  Future<_LxdResponse> _parseResponse(HttpClientResponse response) async {
+    var body = await response.transform(utf8.decoder).join();
     var jsonResponse = json.decode(body);
     _LxdResponse lxdResponse;
     var type = jsonResponse['type'];
