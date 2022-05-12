@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.0.6
+
+* Add missing equality and hash code methods.
+* Split code into smaller modules.
+
 ## 0.0.5
 
 * Only list as supporting Linux.
