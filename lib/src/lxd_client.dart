@@ -118,13 +118,13 @@ class LxdClient {
   /// Get the current state of the operation with [id].
   Future<LxdOperation> getOperation(String id) async {
     var response = await _requestSync('GET', '/1.0/operations/$id');
-    return _parseOperation(response);
+    return LxdOperation.fromJson(response);
   }
 
   /// Wait for the operation with [id] to complete.
   Future<LxdOperation> waitOperation(String id) async {
     var response = await _requestSync('GET', '/1.0/operations/$id/wait');
-    return _parseOperation(response);
+    return LxdOperation.fromJson(response);
   }
 
   /// Cancel the operation with [id].
@@ -734,7 +734,7 @@ class LxdClient {
       var statusCode = jsonResponse['status_code'];
       var status = jsonResponse['status'];
       var metadata = jsonResponse['metadata'];
-      lxdResponse = _LxdAsyncResponse(_parseOperation(metadata),
+      lxdResponse = _LxdAsyncResponse(LxdOperation.fromJson(metadata),
           statusCode: statusCode, status: status);
     } else if (type == 'error') {
       var errorCode = jsonResponse['error_code'];
@@ -745,24 +745,5 @@ class LxdClient {
     }
 
     return lxdResponse;
-  }
-
-  LxdOperation _parseOperation(dynamic data) {
-    var instanceNames = <String>[];
-    for (var path in data['resources']['instances'] ?? []) {
-      if (path.startsWith(_instancePath)) {
-        instanceNames.add(path.substring(_instancePath.length));
-      }
-    }
-    return LxdOperation(
-        createdAt: DateTime.parse(data['created_at']),
-        description: data['description'],
-        error: data['err'],
-        id: data['id'],
-        instanceNames: instanceNames,
-        mayCancel: data['may_cancel'],
-        status: data['status'],
-        statusCode: data['status_code'],
-        updatedAt: DateTime.parse(data['updated_at']));
   }
 }

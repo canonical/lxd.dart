@@ -195,36 +195,47 @@ class MockStoragePool {
 }
 
 class MockOperation {
-  final String createdAt;
-  final String description;
-  final String? error;
   final String id;
-  final bool mayCancel;
+  final String type;
+  final String description;
+  final String createdAt;
+  final String updatedAt;
   String status;
   final int statusCode;
-  final String updatedAt;
+  final Map<String, dynamic> resources;
+  final Map<String, dynamic>? metadata;
+  final bool mayCancel;
+  final String? error;
+  final String location;
 
   MockOperation(
-      {this.createdAt = '1970-01-01',
+      {required this.id,
+      this.type = 'task',
       this.description = '',
-      this.error,
-      required this.id,
-      this.mayCancel = false,
+      this.createdAt = '1970-01-01',
+      this.updatedAt = '1970-01-01',
       this.status = '',
       this.statusCode = 0,
-      this.updatedAt = '1970-01-01'});
+      this.resources = const {},
+      this.metadata,
+      this.mayCancel = false,
+      this.error,
+      this.location = ''});
 
   Map<String, dynamic> toJson() {
     return {
-      'created_at': createdAt,
-      'description': description,
-      'err': error ?? '',
       'id': id,
-      'resources': {},
-      'may_cancel': false,
+      'class': type,
+      'description': description,
+      'created_at': createdAt,
+      'updated_at': updatedAt,
       'status': status,
       'status_code': statusCode,
-      'updated_at': updatedAt
+      'resources': resources,
+      'metadata': metadata,
+      'may_cancel': false,
+      'err': error ?? '',
+      'location': location,
     };
   }
 }

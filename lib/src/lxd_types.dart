@@ -1,60 +1,144 @@
 import 'package:collection/collection.dart';
+import 'package:json_annotation/json_annotation.dart';
 
+part 'lxd_types.g.dart';
+
+enum LxdOperationType { task, websocket, token }
+
+@JsonSerializable(fieldRename: FieldRename.snake)
 class LxdOperation {
-  final DateTime createdAt;
-  final String description;
-  final String error;
+  /// UUID of the operation
+  ///
+  /// Example: 6916c8a6-9b7d-4abd-90b3-aedfec7ec7da
   final String id;
-  final List<String> instanceNames;
-  final bool mayCancel;
-  final String status;
-  final int statusCode;
+
+  /// Type of operation (task, token or websocket)
+  @JsonKey(name: 'class')
+  final LxdOperationType type;
+
+  /// Description of the operation
+  ///
+  /// Example: Executing command
+  final String description;
+
+  /// Operation creation time
+  final DateTime createdAt;
+
+  /// Operation last change
   final DateTime updatedAt;
 
-  LxdOperation(
-      {required this.createdAt,
-      required this.description,
-      this.error = '',
-      required this.id,
-      this.instanceNames = const [],
-      this.mayCancel = false,
-      required this.status,
-      required this.statusCode,
-      required this.updatedAt});
+  /// Status name
+  ///
+  /// Example: Running
+  final String status;
+
+  /// Status code
+  ///
+  /// Example: 103
+  final int statusCode;
+
+  /// Affected resourcs
+  ///
+  /// Example: {"containers": ["/1.0/containers/foo"], "instances": ["/1.0/instances/foo"]}
+  final Map<String, dynamic> resources;
+
+  /// Operation specific metadata
+  ///
+  /// Example:
+  /// ```json
+  /// {
+  ///   "command": ["bash"],
+  ///   "environment": {
+  ///     "HOME": "/root",
+  ///     "LANG": "C.UTF-8",
+  ///     "PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+  ///     "TERM": "xterm",
+  ///     "USER": "root"
+  ///   },
+  ///   "fds": {
+  ///     "0": "da3046cf02c0116febf4ef3fe4eaecdf308e720c05e5a9c730ce1a6f15417f66",
+  ///     "1": "05896879d8692607bd6e4a09475667da3b5f6714418ab0ee0e5720b4c57f754b"
+  ///   },
+  ///   "interactive": true
+  /// }
+  /// ```
+  final Map<String, dynamic>? metadata;
+
+  /// Whether the operation can be canceled
+  final bool mayCancel;
+
+  /// Operation error mesage
+  ///
+  /// Example: Some error message
+  @JsonKey(name: 'err')
+  final String error;
+
+  /// What cluster member this record was found on
+  ///
+  /// Example: lxd01
+  final String location;
+
+  LxdOperation({
+    required this.id,
+    required this.type,
+    required this.description,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.status,
+    required this.statusCode,
+    this.resources = const {},
+    this.metadata,
+    this.mayCancel = false,
+    this.error = '',
+    this.location = '',
+  });
+
+  factory LxdOperation.fromJson(Map<String, dynamic> json) =>
+      _$LxdOperationFromJson(json);
+
+  Map<String, dynamic> toJson() => _$LxdOperationToJson(this);
 
   @override
   String toString() =>
-      'LxdOperation(createdAt: $createdAt, description: $description, error: $error, id: $id, instanceNames: $instanceNames, mayCancel: $mayCancel, status: $status, statusCode: $statusCode, updatedAt: $updatedAt)';
+      'LxdOperation(id: $id, type: $type, description: $description, createdAt: $createdAt, updatedAt: $updatedAt, status: $status, statusCode: $statusCode, resources: $resources, $metadata, mayCancel: $mayCancel, error: $error, location: $location)';
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    final listEquals = const DeepCollectionEquality().equals;
+    final mapEquals = const DeepCollectionEquality().equals;
 
     return other is LxdOperation &&
-        other.createdAt == createdAt &&
-        other.description == description &&
-        other.error == error &&
         other.id == id &&
-        listEquals(other.instanceNames, instanceNames) &&
-        other.mayCancel == mayCancel &&
+        other.type == type &&
+        other.description == description &&
+        other.createdAt == createdAt &&
+        other.updatedAt == updatedAt &&
         other.status == status &&
         other.statusCode == statusCode &&
-        other.updatedAt == updatedAt;
+        mapEquals(other.resources, resources) &&
+        mapEquals(other.metadata, metadata) &&
+        other.mayCancel == mayCancel &&
+        other.error == error &&
+        other.location == location;
   }
 
   @override
   int get hashCode {
+    final mapHash = const DeepCollectionEquality().hash;
+
     return Object.hash(
-      createdAt,
-      description,
-      error,
       id,
-      instanceNames,
-      mayCancel,
+      type,
+      description,
+      createdAt,
+      updatedAt,
       status,
       statusCode,
-      updatedAt,
+      mapHash(resources),
+      mapHash(metadata),
+      mayCancel,
+      error,
+      location,
     );
   }
 }
