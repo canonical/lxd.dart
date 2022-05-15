@@ -14,7 +14,7 @@ void main() async {
   var operation = await client.createInstance(image: image);
   operation = await client.waitOperation(operation.id);
   if (operation.status == 'Success') {
-    print('Instance ${operation.instanceNames.first} created.');
+    print('Instance ${operation.resources['instances']} created.');
   } else {
     print('Failed: ${operation.error}');
   }
