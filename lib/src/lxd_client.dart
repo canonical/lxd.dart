@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'lxd_image.dart';
 import 'lxd_types.dart';
 import 'simplestream_client.dart';
 
@@ -289,21 +290,7 @@ class LxdClient {
   /// Gets information on an image with [fingerprint].
   Future<LxdImage> getImage(String fingerprint) async {
     var image = await _requestSync('GET', '/1.0/images/$fingerprint');
-    return LxdImage(
-        architecture: image['architecture'],
-        autoUpdate: image['auto_update'],
-        cached: image['cached'],
-        createdAt: DateTime.parse(image['created_at']),
-        expiresAt: DateTime.parse(image['expires_at']),
-        filename: image['filename'],
-        fingerprint: image['fingerprint'],
-        lastUsedAt: DateTime.parse(image['last_used_at']),
-        profiles: image['profiles'].cast<String>(),
-        properties: image['properties'].cast<String, String>(),
-        public: image['public'],
-        size: image['size'],
-        type: image['type'],
-        uploadedAt: DateTime.parse(image['uploaded_at']));
+    return LxdImage.fromJson(image);
   }
 
   /// Gets the remote images available on the Simplestreams server at [url].

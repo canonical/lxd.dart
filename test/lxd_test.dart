@@ -21,33 +21,35 @@ class MockCertificate {
 }
 
 class MockImage {
-  final String architecture;
   final bool autoUpdate;
-  final bool cached;
-  final String createdAt;
-  final String expiresAt;
-  final String filename;
-  final String lastUsedAt;
-  final List<String> profiles;
   final Map<String, String> properties;
   final bool public;
+  final String expiresAt;
+  final List<String> profiles;
+  final List<String> aliases;
+  final String architecture;
+  final bool cached;
+  final String filename;
   final int size;
   final String type;
+  final String createdAt;
+  final String lastUsedAt;
   final String uploadedAt;
 
   MockImage(
-      {this.architecture = '',
-      this.autoUpdate = false,
-      this.cached = false,
-      this.createdAt = '1970-01-01',
-      this.expiresAt = '1970-01-01',
-      this.filename = '',
-      this.lastUsedAt = '1970-01-01',
-      this.profiles = const [],
+      {this.autoUpdate = false,
       this.properties = const {},
       this.public = false,
+      this.expiresAt = '1970-01-01',
+      this.profiles = const [],
+      this.aliases = const [],
+      this.architecture = '',
+      this.cached = false,
+      this.filename = '',
       this.size = 0,
       this.type = '',
+      this.createdAt = '1970-01-01',
+      this.lastUsedAt = '1970-01-01',
       this.uploadedAt = '1970-01-01'});
 }
 
@@ -593,19 +595,20 @@ class MockLxdServer {
   void _getImage(HttpResponse response, String fingerprint) {
     var image = images[fingerprint]!;
     _writeSyncResponse(response, {
-      'architecture': image.architecture,
       'auto_update': image.autoUpdate,
-      'cached': image.cached,
-      'created_at': image.createdAt,
-      'expires_at': image.expiresAt,
-      'filename': image.filename,
-      'fingerprint': fingerprint,
-      'last_used_at': image.lastUsedAt,
-      'profiles': image.profiles,
       'properties': image.properties,
       'public': image.public,
+      'expires_at': image.expiresAt,
+      'profiles': image.profiles,
+      'aliases': image.aliases,
+      'architecture': image.architecture,
+      'cached': image.cached,
+      'filename': image.filename,
+      'fingerprint': fingerprint,
       'size': image.size,
       'type': image.type,
+      'created_at': image.createdAt,
+      'last_used_at': image.lastUsedAt,
       'uploaded_at': image.uploadedAt
     });
   }
@@ -989,7 +992,7 @@ void main() {
     expect(image.profiles, equals([]));
     expect(image.public, isFalse);
     expect(image.size, equals(272237676));
-    expect(image.type, equals('container'));
+    expect(image.type, equals(LxdImageType.container));
     expect(image.uploadedAt,
         equals(DateTime.parse('2021-03-24T14:18:15.115036787-04:00')));
 

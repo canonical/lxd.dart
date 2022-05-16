@@ -30,7 +30,7 @@ void main(List<String> args) async {
         'no',
         image.properties['description'] ?? '',
         image.architecture,
-        image.type,
+        image.type.name,
         image.size.toString(),
         image.uploadedAt.toString()
       ]);
