@@ -1,7 +1,7 @@
 name: lxd
 version: 0.0.6
 
-description:
+description: |
   Provides a client to access lxd, which allows you to manage containers on a Linux system.
 
 homepage: https://github.com/canonical/lxd.dart
