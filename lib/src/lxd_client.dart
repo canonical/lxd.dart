@@ -97,7 +97,7 @@ class LxdClient {
         var lxdDir = Platform.environment['LXD_DIR'];
         var snapSocketPath = '/var/snap/lxd/common/lxd/unix.socket';
         if (lxdDir != null) {
-          socketPath = lxdDir + '/unix.socket';
+          socketPath = '$lxdDir/unix.socket';
         } else if (await File(snapSocketPath).exists()) {
           socketPath = snapSocketPath;
         } else {
