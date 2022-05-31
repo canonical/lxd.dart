@@ -295,11 +295,17 @@ class LxdClient {
 
   /// Gets the remote images available on the Simplestreams server at [url].
   Future<List<LxdRemoteImage>> getRemoteImages(String url) async {
+    await _connect();
+    var architecture = _hostInfo['environment']['architectures'][0] ?? '';
+
     var s = SimplestreamClient(url);
 
     var images = <LxdRemoteImage>[];
     var products = await s.getProducts(datatype: 'image-downloads');
     for (var product in products) {
+      if (_getArchitecture(product.architecture ?? '') != architecture) {
+        continue;
+      }
       images.addAll(_getRemoteImages(url, product));
     }
 
