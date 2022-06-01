@@ -472,7 +472,9 @@ class MockLxdServer {
       'auth': 'trusted',
       'public': false,
       'auth_methods': ['tls'],
-      'environment': {'architecture': 'amd64'}
+      'environment': {
+        'architectures': ['x86_64']
+      }
     });
   }
 
@@ -880,7 +882,7 @@ class MockSimplestreamServer {
           request.uri.path == '/streams/v1/images.json') {
         response.headers.contentType = ContentType('application', 'json');
         response.write(
-            '{"datatype": "image-downloads", "format": "products:1.0", "products": {"ubuntu:bionic:amd64:default": {"arch": "amd64", "os": "Ubuntu", "release": "bionic", "release_title": "bionic", "versions": {"20220529_07:43": {"items": {"lxd.tar.xz": {"ftype": "lxd.tar.xz", "size": 676, "path": "images/ubuntu/bionic/amd64/default/20220529_07:42/lxd.tar.xz", "combined_squashfs_sha256": "feeecf809db550da6ff74c67804d1c6df3e65284bb3e561f92d1cc5c3a3cedd4"}, "root.squashfs": {"ftype": "squashfs", "size": 111185920, "path": "images/ubuntu/bionic/amd64/default/20220529_07:42/rootfs.squashfs"}}}}}, "ubuntu:focal:amd64:default": {"arch": "amd64", "os": "Ubuntu", "release": "focal", "release_title": "focal", "versions": {"20220529_07:42": {"items": {"lxd.tar.xz": {"ftype": "lxd.tar.xz", "size": 676, "path": "images/ubuntu/focal/amd64/default/20220529_07:42/lxd.tar.xz", "combined_squashfs_sha256": "24bf17b16bbcc42235843e7079877b8af55bd7b3448004c7d2d00ea751fd1a71"}, "root.squashfs": {"ftype": "squashfs", "size": 115589120, "path": "images/ubuntu/focal/amd64/default/20220529_07:42/rootfs.squashfs"}}}}}}}');
+            '{"datatype": "image-downloads", "format": "products:1.0", "products": {"ubuntu:bionic:amd64:default": {"aliases": "ubuntu/bionic/default,ubuntu/18.04/default,ubuntu/bionic,ubuntu/18.04", "arch": "amd64", "os": "Ubuntu", "release": "bionic", "release_title": "bionic", "versions": {"20220529_07:43": {"items": {"lxd.tar.xz": {"ftype": "lxd.tar.xz", "size": 676, "path": "images/ubuntu/bionic/amd64/default/20220529_07:42/lxd.tar.xz", "combined_squashfs_sha256": "feeecf809db550da6ff74c67804d1c6df3e65284bb3e561f92d1cc5c3a3cedd4"}, "root.squashfs": {"ftype": "squashfs", "size": 111185920, "path": "images/ubuntu/bionic/amd64/default/20220529_07:42/rootfs.squashfs"}}}}}, "ubuntu:focal:amd64:default": {"aliases": "ubuntu/focal/default,ubuntu/20.04/default,ubuntu/focal,ubuntu/20.04", "arch": "amd64", "os": "Ubuntu", "release": "focal", "release_title": "focal", "versions": {"20220529_07:42": {"items": {"lxd.tar.xz": {"ftype": "lxd.tar.xz", "size": 676, "path": "images/ubuntu/focal/amd64/default/20220529_07:42/lxd.tar.xz", "combined_squashfs_sha256": "24bf17b16bbcc42235843e7079877b8af55bd7b3448004c7d2d00ea751fd1a71"}, "root.squashfs": {"ftype": "squashfs", "size": 115589120, "path": "images/ubuntu/focal/amd64/default/20220529_07:42/rootfs.squashfs"}}}}}}}');
       } else {
         response.statusCode = HttpStatus.notFound;
       }
@@ -1501,7 +1503,7 @@ void main() {
     await lxd.close();
   });
 
-  test('remote images', () async {
+  test('get remote images', () async {
     var s = MockSimplestreamServer();
     await s.start();
 
@@ -1522,6 +1524,25 @@ void main() {
     expect(images[1].architecture, equals('amd64'));
     expect(images[1].description, equals('Ubuntu focal'));
     expect(images[1].size, equals(115589120));
+
+    client.close();
+    await lxd.close();
+    await s.close();
+  });
+
+  test('find remote image', () async {
+    var s = MockSimplestreamServer();
+    await s.start();
+
+    var lxd = MockLxdServer();
+    await lxd.start();
+
+    var client = LxdClient(socketPath: lxd.socketPath);
+    var image = await client.findRemoteImage(s.url, 'ubuntu/bionic');
+
+    expect(image, isNotNull);
+    expect(image!.type, equals(LxdRemoteImageType.container));
+    expect(image.description, equals('Ubuntu bionic'));
 
     client.close();
     await lxd.close();
