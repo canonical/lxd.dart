@@ -4,26 +4,18 @@ import 'dart:io';
 class SimplestreamProduct {
   final Set<String> aliases;
   final String? architecture;
-  final String? crsn;
   final String? os;
   final String? release;
-  final String? releaseCodename;
   final String? releaseTitle;
-  final bool supported;
-  final DateTime? supportEol;
   final String? version;
   final Map<String, Map<String, SimplestreamDownloadItem>> versions;
 
   SimplestreamProduct(
       {this.aliases = const {},
       this.architecture,
-      this.crsn,
       this.os,
       this.release,
-      this.releaseCodename,
       this.releaseTitle,
-      this.supported = true,
-      this.supportEol,
       this.version,
       required this.versions});
 }
@@ -125,15 +117,9 @@ class SimplestreamClient {
       products.add(SimplestreamProduct(
           aliases: aliases,
           architecture: product['arch'],
-          crsn: product['crsn'],
           os: product['os'],
           release: product['release'],
-          releaseCodename: product['release_codename'],
           releaseTitle: product['release_title'],
-          supported: product['supported'] ?? true,
-          supportEol: product.containsKey('support_eol')
-              ? DateTime.parse(product['support_eol'])
-              : null,
           version: product['version'],
           versions: versions));
     }
