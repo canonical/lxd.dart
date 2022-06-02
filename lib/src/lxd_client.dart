@@ -295,7 +295,7 @@ class LxdClient {
     await _connect();
     var architecture = _hostInfo['environment']['architectures'][0] ?? '';
 
-    var s = SimplestreamClient(url);
+    var s = SimplestreamClient(url, userAgent: _userAgent);
 
     var images = <LxdRemoteImage>[];
     var products = await s.getProducts(datatype: 'image-downloads');
@@ -316,7 +316,7 @@ class LxdClient {
     await _connect();
     var architecture = _hostInfo['environment']['architectures'][0] ?? '';
 
-    var s = SimplestreamClient(url);
+    var s = SimplestreamClient(url, userAgent: _userAgent);
 
     var products = await s.getProducts(datatype: 'image-downloads');
     for (var product in products) {
