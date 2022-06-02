@@ -84,7 +84,7 @@ class _LxdErrorResponse extends _LxdResponse {
 /// Manages a connection to the lxd server.
 class LxdClient {
   final HttpClient _client;
-  String? _userAgent;
+  final String? _userAgent;
 
   dynamic _hostInfo;
 
@@ -109,9 +109,6 @@ class LxdClient {
       return Socket.startConnect(address, 0);
     };
   }
-
-  /// Sets the user agent sent in requests to lxd.
-  set userAgent(String? value) => _userAgent = value;
 
   /// Get the operations in progress (keyed by type).
   Future<Map<String, List<String>>> getOperations() async {
