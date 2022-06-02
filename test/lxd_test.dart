@@ -863,11 +863,54 @@ class MockLxdServer {
   }
 }
 
+class MockSimplestreamProduct {
+  final String name;
+  final List<String> aliases;
+  final String arch;
+  final String os;
+  final String release;
+  final String releaseTitle;
+  final String variant;
+  final List<MockSimplestreamProductVersion> versions;
+
+  MockSimplestreamProduct(
+      {required this.name,
+      this.aliases = const [],
+      required this.arch,
+      required this.os,
+      required this.release,
+      this.releaseTitle = '',
+      this.variant = 'default',
+      this.versions = const []});
+}
+
+class MockSimplestreamProductVersion {
+  final String id;
+  final List<MockSimplestreamProductItem> items;
+  MockSimplestreamProductVersion({required this.id, this.items = const []});
+}
+
+class MockSimplestreamProductItem {
+  final String name;
+  final String ftype;
+  final int size;
+  final String? combinedSquashfsSha256;
+
+  MockSimplestreamProductItem(
+      {required this.name,
+      required this.ftype,
+      this.size = 0,
+      this.combinedSquashfsSha256});
+}
+
 class MockSimplestreamServer {
+  final List<MockSimplestreamProduct> products;
   late final HttpServer httpServer;
   late final StreamSubscription<HttpRequest> _requestsSubscription;
 
   String get url => 'http://localhost:${httpServer.port}';
+
+  MockSimplestreamServer({required this.products});
 
   Future<void> start() async {
     httpServer = await HttpServer.bind(InternetAddress.anyIPv4, 0);
@@ -876,87 +919,62 @@ class MockSimplestreamServer {
       if (request.method == 'GET' &&
           request.uri.path == '/streams/v1/index.json') {
         response.headers.contentType = ContentType('application', 'json');
-        var data = {
+        var products = <String, dynamic>{};
+        var index = 0;
+        for (var p in this.products) {
+          products['$index'] = '${p.name}:${p.release}:${p.arch}:${p.variant}';
+          index++;
+        }
+        response.write(json.encode({
           'format': 'index:1.0',
           'index': {
             'images': {
               'datatype': 'image-downloads',
               'path': 'streams/v1/images.json',
               'format': 'products:1.0',
-              'products': {
-                '0': 'ubuntu:bionic:amd64:default',
-                '1': 'ubuntu:focal:amd64:default'
-              }
+              'products': products
             }
           }
-        };
-        response.write(json.encode(data));
+        }));
       } else if (request.method == 'GET' &&
           request.uri.path == '/streams/v1/images.json') {
         response.headers.contentType = ContentType('application', 'json');
-        var data = {
+        var products = <String, dynamic>{};
+        for (var p in this.products) {
+          var id = '${p.name}:${p.release}:${p.arch}:${p.variant}';
+          var versions = <String, dynamic>{};
+          for (var v in p.versions) {
+            var items = <String, dynamic>{};
+            for (var i in v.items) {
+              var itemData = {
+                'ftype': i.ftype,
+                'size': i.size,
+                'path':
+                    'images/${p.name}/${p.release}/${p.arch}/${p.variant}/$id/${i.name}'
+              };
+              if (i.combinedSquashfsSha256 != null) {
+                itemData['combined_squashfs_sha256'] =
+                    i.combinedSquashfsSha256!;
+              }
+              items[i.name] = itemData;
+            }
+            versions[v.id] = {'items': items};
+          }
+          products[id] = {
+            'aliases': p.aliases.join(','),
+            'arch': p.arch,
+            'os': p.os,
+            'release': p.release,
+            'release_title': p.releaseTitle,
+            'variant': p.variant,
+            'versions': versions
+          };
+        }
+        response.write(json.encode({
           'datatype': 'image-downloads',
           'format': 'products:1.0',
-          'products': {
-            'ubuntu:bionic:amd64:default': {
-              'aliases':
-                  'ubuntu/bionic/default,ubuntu/18.04/default,ubuntu/bionic,ubuntu/18.04',
-              'arch': 'amd64',
-              'os': 'Ubuntu',
-              'release': 'bionic',
-              'release_title': 'bionic',
-              'versions': {
-                '20220529_07:43': {
-                  'items': {
-                    'lxd.tar.xz': {
-                      'ftype': 'lxd.tar.xz',
-                      'size': 676,
-                      'path':
-                          'images/ubuntu/bionic/amd64/default/20220529_07:42/lxd.tar.xz',
-                      'combined_squashfs_sha256':
-                          'feeecf809db550da6ff74c67804d1c6df3e65284bb3e561f92d1cc5c3a3cedd4'
-                    },
-                    'root.squashfs': {
-                      'ftype': 'squashfs',
-                      'size': 111185920,
-                      'path':
-                          'images/ubuntu/bionic/amd64/default/20220529_07:42/rootfs.squashfs'
-                    }
-                  }
-                }
-              }
-            },
-            'ubuntu:focal:amd64:default': {
-              'aliases':
-                  'ubuntu/focal/default,ubuntu/20.04/default,ubuntu/focal,ubuntu/20.04',
-              'arch': 'amd64',
-              'os': 'Ubuntu',
-              'release': 'focal',
-              'release_title': 'focal',
-              'versions': {
-                '20220529_07:42': {
-                  'items': {
-                    'lxd.tar.xz': {
-                      'ftype': 'lxd.tar.xz',
-                      'size': 676,
-                      'path':
-                          'images/ubuntu/focal/amd64/default/20220529_07:42/lxd.tar.xz',
-                      'combined_squashfs_sha256':
-                          '24bf17b16bbcc42235843e7079877b8af55bd7b3448004c7d2d00ea751fd1a71'
-                    },
-                    'root.squashfs': {
-                      'ftype': 'squashfs',
-                      'size': 115589120,
-                      'path':
-                          'images/ubuntu/focal/amd64/default/20220529_07:42/rootfs.squashfs'
-                    }
-                  }
-                }
-              }
-            }
-          }
-        };
-        response.write(json.encode(data));
+          'products': products
+        }));
       } else {
         response.statusCode = HttpStatus.notFound;
       }
@@ -1578,7 +1596,58 @@ void main() {
   });
 
   test('get remote images', () async {
-    var s = MockSimplestreamServer();
+    var s = MockSimplestreamServer(products: [
+      MockSimplestreamProduct(
+          name: 'ubuntu',
+          aliases: [
+            'ubuntu/bionic/default',
+            'ubuntu/18.04/default',
+            'ubuntu/bionic',
+            'ubuntu/18.04'
+          ],
+          arch: 'amd64',
+          os: 'Ubuntu',
+          release: 'bionic',
+          releaseTitle: 'bionic',
+          variant: 'default',
+          versions: [
+            MockSimplestreamProductVersion(id: '20220529_07:43', items: [
+              MockSimplestreamProductItem(
+                  name: 'lxd.tar.xz',
+                  ftype: 'lxd.tar.xz',
+                  size: 676,
+                  combinedSquashfsSha256:
+                      'feeecf809db550da6ff74c67804d1c6df3e65284bb3e561f92d1cc5c3a3cedd4'),
+              MockSimplestreamProductItem(
+                  name: 'root.squashfs', ftype: 'squashfs', size: 111185920)
+            ]),
+          ]),
+      MockSimplestreamProduct(
+          name: 'ubuntu',
+          aliases: [
+            'ubuntu/focal/default',
+            'ubuntu/20.04/default',
+            'ubuntu/focal',
+            'ubuntu/20.04'
+          ],
+          arch: 'amd64',
+          os: 'Ubuntu',
+          release: 'focal',
+          releaseTitle: 'focal',
+          variant: 'default',
+          versions: [
+            MockSimplestreamProductVersion(id: '20220529_07:42', items: [
+              MockSimplestreamProductItem(
+                  name: 'lxd.tar.xz',
+                  ftype: 'lxd.tar.xz',
+                  size: 676,
+                  combinedSquashfsSha256:
+                      '24bf17b16bbcc42235843e7079877b8af55bd7b3448004c7d2d00ea751fd1a71'),
+              MockSimplestreamProductItem(
+                  name: 'root.squashfs', ftype: 'squashfs', size: 115589120)
+            ]),
+          ]),
+    ]);
     await s.start();
 
     var lxd = MockLxdServer();
@@ -1605,7 +1674,58 @@ void main() {
   });
 
   test('find remote image', () async {
-    var s = MockSimplestreamServer();
+    var s = MockSimplestreamServer(products: [
+      MockSimplestreamProduct(
+          name: 'ubuntu',
+          aliases: [
+            'ubuntu/bionic/default',
+            'ubuntu/18.04/default',
+            'ubuntu/bionic',
+            'ubuntu/18.04'
+          ],
+          arch: 'amd64',
+          os: 'Ubuntu',
+          release: 'bionic',
+          releaseTitle: 'bionic',
+          variant: 'default',
+          versions: [
+            MockSimplestreamProductVersion(id: '20220529_07:43', items: [
+              MockSimplestreamProductItem(
+                  name: 'lxd.tar.xz',
+                  ftype: 'lxd.tar.xz',
+                  size: 676,
+                  combinedSquashfsSha256:
+                      'feeecf809db550da6ff74c67804d1c6df3e65284bb3e561f92d1cc5c3a3cedd4'),
+              MockSimplestreamProductItem(
+                  name: 'root.squashfs', ftype: 'squashfs', size: 111185920)
+            ]),
+          ]),
+      MockSimplestreamProduct(
+          name: 'ubuntu',
+          aliases: [
+            'ubuntu/focal/default',
+            'ubuntu/20.04/default',
+            'ubuntu/focal',
+            'ubuntu/20.04'
+          ],
+          arch: 'amd64',
+          os: 'Ubuntu',
+          release: 'focal',
+          releaseTitle: 'focal',
+          variant: 'default',
+          versions: [
+            MockSimplestreamProductVersion(id: '20220529_07:42', items: [
+              MockSimplestreamProductItem(
+                  name: 'lxd.tar.xz',
+                  ftype: 'lxd.tar.xz',
+                  size: 676,
+                  combinedSquashfsSha256:
+                      '24bf17b16bbcc42235843e7079877b8af55bd7b3448004c7d2d00ea751fd1a71'),
+              MockSimplestreamProductItem(
+                  name: 'root.squashfs', ftype: 'squashfs', size: 115589120)
+            ]),
+          ]),
+    ]);
     await s.start();
 
     var lxd = MockLxdServer();
