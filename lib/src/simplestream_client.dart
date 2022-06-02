@@ -1,13 +1,24 @@
 import 'dart:convert';
 import 'dart:io';
 
+/// A product available on a Simplestream server.
 class SimplestreamProduct {
+  /// Aliases of this product name.
   final Set<String> aliases;
+
+  /// The architecture this product is for, e.g. 'amd64'.
   final String? architecture;
+
+  /// The operating system provided.
   final String? os;
+
+  /// The release of this product.
   final String? release;
+
+  /// Human readable title for this product release.
   final String? releaseTitle;
-  final String? version;
+
+  /// Versions available of this product.
   final Map<String, Map<String, SimplestreamDownloadItem>> versions;
 
   SimplestreamProduct(
@@ -16,37 +27,48 @@ class SimplestreamProduct {
       this.os,
       this.release,
       this.releaseTitle,
-      this.version,
       required this.versions});
 }
 
+/// An item that can be downloaded for a [SimplestreamProduct].
 class SimplestreamDownloadItem {
-  final String? combinedDisk1ImgSha256;
-  final String? combinedSquashfsSha256;
+  /// The type of this download item, e.g. 'lxd.tar.gz' or 'squashfs'
   final String ftype;
-  final String? md5;
+
+  /// Path to the download item, e.g. 'images/ubuntu/bionic/amd64/default/20220530_07:46/lxd.tar.gz'
   final String path;
-  final String? sha256;
+
+  /// Size of the item in bytes.
   final int size;
 
+  /// SHA-256 checksum of this item.
+  final String? sha256;
+
+  /// SHA-256 of the disk.img item associated with this item.
+  final String? combinedDisk1ImgSha256;
+
+  /// SHA-256 of the squashfs item associated with this item.
+  final String? combinedSquashfsSha256;
+
   SimplestreamDownloadItem(
-      {this.combinedDisk1ImgSha256,
-      this.combinedSquashfsSha256,
-      required this.ftype,
-      this.md5,
+      {required this.ftype,
       required this.path,
+      required this.size,
       this.sha256,
-      required this.size});
+      this.combinedDisk1ImgSha256,
+      this.combinedSquashfsSha256});
 
   @override
   String toString() =>
-      'SimplestreamDownloadItem(combinedDisk1ImgSha256: $combinedDisk1ImgSha256, combinedSquashfsSha256: $combinedSquashfsSha256, ftype: $ftype, md5: $md5, path: $path, sha256: $sha256, size: $size)';
+      'SimplestreamDownloadItem(ftype: $ftype, path: $path, size: $size, sha256: $sha256, combinedDisk1ImgSha256: $combinedDisk1ImgSha256, combinedSquashfsSha256: $combinedSquashfsSha256)';
 }
 
 /// Manages a connection to the lxd server.
 class SimplestreamClient {
-  final HttpClient _client = HttpClient();
+  /// The URL this client is connected to.
   final String url;
+
+  final HttpClient _client = HttpClient();
   final String? _userAgent;
 
   SimplestreamClient(this.url, {String? userAgent = 'lxd.dart'})
@@ -103,7 +125,6 @@ class SimplestreamClient {
               combinedDisk1ImgSha256: item['combined_disk1-img_sha256'],
               combinedSquashfsSha256: item['combined_squashfs_sha256'],
               ftype: item['ftype'],
-              md5: item['md5'],
               path: item['path'],
               sha256: item['sha256'],
               size: item['size']);
@@ -120,7 +141,6 @@ class SimplestreamClient {
           os: product['os'],
           release: product['release'],
           releaseTitle: product['release_title'],
-          version: product['version'],
           versions: versions));
     }
 
