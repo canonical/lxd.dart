@@ -55,13 +55,10 @@ class SimplestreamDownloadItem {
 class SimplestreamClient {
   final HttpClient _client = HttpClient();
   final String url;
-  String? _userAgent;
+  final String? _userAgent;
 
   SimplestreamClient(this.url, {String userAgent = 'lxd.dart'})
       : _userAgent = userAgent;
-
-  /// Sets the user agent sent in requests to the simple streams server.
-  set userAgent(String? value) => _userAgent = value;
 
   /// Gets all the products this server provides.
   /// If provided, only gets products with the given [datatype].
