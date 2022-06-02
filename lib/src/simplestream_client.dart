@@ -57,7 +57,7 @@ class SimplestreamClient {
   final String url;
   final String? _userAgent;
 
-  SimplestreamClient(this.url, {String userAgent = 'lxd.dart'})
+  SimplestreamClient(this.url, {String? userAgent = 'lxd.dart'})
       : _userAgent = userAgent;
 
   /// Gets all the products this server provides.
