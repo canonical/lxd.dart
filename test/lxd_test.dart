@@ -261,6 +261,9 @@ class MockLxdServer {
   final Map<String, MockProject> projects;
   final Map<String, MockStoragePool> storagePools;
 
+  // Last user agent received.
+  String? lastUserAgent;
+
   String get socketPath => _socketPath!;
 
   MockLxdServer(
@@ -294,6 +297,8 @@ class MockLxdServer {
   }
 
   void _processRequest(HttpRequest request) {
+    lastUserAgent = request.headers.value(HttpHeaders.userAgentHeader);
+
     var response = request.response;
     var path = request.uri.path.startsWith('/')
         ? request.uri.path.substring(1).split('/')
@@ -908,13 +913,18 @@ class MockSimplestreamServer {
   late final HttpServer httpServer;
   late final StreamSubscription<HttpRequest> _requestsSubscription;
 
+  // Last user agent received.
+  String? lastUserAgent;
+
   String get url => 'http://localhost:${httpServer.port}';
 
-  MockSimplestreamServer({required this.products});
+  MockSimplestreamServer({this.products = const []});
 
   Future<void> start() async {
     httpServer = await HttpServer.bind(InternetAddress.anyIPv4, 0);
     _requestsSubscription = httpServer.listen((request) {
+      lastUserAgent = request.headers.value(HttpHeaders.userAgentHeader);
+
       var response = request.response;
       if (request.method == 'GET' &&
           request.uri.path == '/streams/v1/index.json') {
@@ -1717,6 +1727,25 @@ void main() {
     expect(image, isNotNull);
     expect(image!.type, equals(LxdRemoteImageType.container));
     expect(image.description, equals('Ubuntu bionic'));
+
+    client.close();
+    await lxd.close();
+    await s.close();
+  });
+
+  test('user agents', () async {
+    var s = MockSimplestreamServer();
+    await s.start();
+
+    var lxd = MockLxdServer();
+    await lxd.start();
+
+    var client =
+        LxdClient(socketPath: lxd.socketPath, userAgent: 'test-user-agent');
+    await client.getRemoteImages(s.url);
+
+    expect(lxd.lastUserAgent, equals('test-user-agent'));
+    expect(s.lastUserAgent, equals('test-user-agent'));
 
     client.close();
     await lxd.close();
