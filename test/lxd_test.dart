@@ -869,7 +869,7 @@ class MockSimplestreamProduct {
   final String arch;
   final String os;
   final String release;
-  final String releaseTitle;
+  final String? releaseTitle;
   final String variant;
   final List<MockSimplestreamProductVersion> versions;
 
@@ -879,7 +879,7 @@ class MockSimplestreamProduct {
       required this.arch,
       required this.os,
       required this.release,
-      this.releaseTitle = '',
+      this.releaseTitle,
       this.variant = 'default',
       this.versions = const []});
 }
@@ -965,7 +965,7 @@ class MockSimplestreamServer {
             'arch': p.arch,
             'os': p.os,
             'release': p.release,
-            'release_title': p.releaseTitle,
+            'release_title': p.releaseTitle ?? p.release,
             'variant': p.variant,
             'versions': versions
           };
@@ -1599,23 +1599,15 @@ void main() {
     var s = MockSimplestreamServer(products: [
       MockSimplestreamProduct(
           name: 'ubuntu',
-          aliases: [
-            'ubuntu/bionic/default',
-            'ubuntu/18.04/default',
-            'ubuntu/bionic',
-            'ubuntu/18.04'
-          ],
           arch: 'amd64',
           os: 'Ubuntu',
           release: 'bionic',
-          releaseTitle: 'bionic',
           variant: 'default',
           versions: [
             MockSimplestreamProductVersion(id: '20220529_07:43', items: [
               MockSimplestreamProductItem(
                   name: 'lxd.tar.xz',
                   ftype: 'lxd.tar.xz',
-                  size: 676,
                   combinedSquashfsSha256:
                       'feeecf809db550da6ff74c67804d1c6df3e65284bb3e561f92d1cc5c3a3cedd4'),
               MockSimplestreamProductItem(
@@ -1624,23 +1616,15 @@ void main() {
           ]),
       MockSimplestreamProduct(
           name: 'ubuntu',
-          aliases: [
-            'ubuntu/focal/default',
-            'ubuntu/20.04/default',
-            'ubuntu/focal',
-            'ubuntu/20.04'
-          ],
           arch: 'amd64',
           os: 'Ubuntu',
           release: 'focal',
-          releaseTitle: 'focal',
           variant: 'default',
           versions: [
             MockSimplestreamProductVersion(id: '20220529_07:42', items: [
               MockSimplestreamProductItem(
                   name: 'lxd.tar.xz',
                   ftype: 'lxd.tar.xz',
-                  size: 676,
                   combinedSquashfsSha256:
                       '24bf17b16bbcc42235843e7079877b8af55bd7b3448004c7d2d00ea751fd1a71'),
               MockSimplestreamProductItem(
@@ -1686,18 +1670,16 @@ void main() {
           arch: 'amd64',
           os: 'Ubuntu',
           release: 'bionic',
-          releaseTitle: 'bionic',
           variant: 'default',
           versions: [
             MockSimplestreamProductVersion(id: '20220529_07:43', items: [
               MockSimplestreamProductItem(
                   name: 'lxd.tar.xz',
                   ftype: 'lxd.tar.xz',
-                  size: 676,
                   combinedSquashfsSha256:
                       'feeecf809db550da6ff74c67804d1c6df3e65284bb3e561f92d1cc5c3a3cedd4'),
               MockSimplestreamProductItem(
-                  name: 'root.squashfs', ftype: 'squashfs', size: 111185920)
+                  name: 'root.squashfs', ftype: 'squashfs')
             ]),
           ]),
       MockSimplestreamProduct(
@@ -1711,18 +1693,16 @@ void main() {
           arch: 'amd64',
           os: 'Ubuntu',
           release: 'focal',
-          releaseTitle: 'focal',
           variant: 'default',
           versions: [
             MockSimplestreamProductVersion(id: '20220529_07:42', items: [
               MockSimplestreamProductItem(
                   name: 'lxd.tar.xz',
                   ftype: 'lxd.tar.xz',
-                  size: 676,
                   combinedSquashfsSha256:
                       '24bf17b16bbcc42235843e7079877b8af55bd7b3448004c7d2d00ea751fd1a71'),
               MockSimplestreamProductItem(
-                  name: 'root.squashfs', ftype: 'squashfs', size: 115589120)
+                  name: 'root.squashfs', ftype: 'squashfs')
             ]),
           ]),
     ]);
