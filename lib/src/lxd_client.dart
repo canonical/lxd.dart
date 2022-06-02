@@ -344,7 +344,7 @@ class LxdClient {
     var images = <LxdRemoteImage>[];
 
     for (var v in product.versions.values) {
-      var lxdItem = v['lxd.tar.xz'] as SimplestreamDownloadItem?;
+      var lxdItem = v['lxd.tar.xz'];
       if (lxdItem == null) {
         continue;
       }
