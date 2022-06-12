@@ -60,7 +60,7 @@ class SimplestreamDownloadItem {
 
   @override
   String toString() =>
-      'SimplestreamDownloadItem(ftype: $ftype, path: $path, size: $size, sha256: $sha256, combinedDisk1ImgSha256: $combinedDisk1ImgSha256, combinedSquashfsSha256: $combinedSquashfsSha256)';
+      '$runtimeType(ftype: $ftype, path: $path, size: $size, sha256: $sha256, combinedDisk1ImgSha256: $combinedDisk1ImgSha256, combinedSquashfsSha256: $combinedSquashfsSha256)';
 }
 
 /// Manages a connection to the lxd server.

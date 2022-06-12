@@ -100,7 +100,7 @@ class LxdOperation {
 
   @override
   String toString() =>
-      'LxdOperation(id: $id, type: $type, description: $description, createdAt: $createdAt, updatedAt: $updatedAt, status: $status, statusCode: $statusCode, resources: $resources, $metadata, mayCancel: $mayCancel, error: $error, location: $location)';
+      '$runtimeType(id: $id, type: $type, description: $description, createdAt: $createdAt, updatedAt: $updatedAt, status: $status, statusCode: $statusCode, resources: $resources, $metadata, mayCancel: $mayCancel, error: $error, location: $location)';
 
   @override
   bool operator ==(Object other) {
@@ -151,7 +151,7 @@ class LxdCpuResources {
 
   @override
   String toString() =>
-      'LxdCpuResources(architecture: $architecture, sockets: $sockets)';
+      '$runtimeType(architecture: $architecture, sockets: $sockets)';
 
   @override
   bool operator ==(Object other) {
@@ -174,7 +174,7 @@ class LxdMemoryResources {
   LxdMemoryResources({required this.used, required this.total});
 
   @override
-  String toString() => 'LxdMemoryResources(used: $used, total: $total)';
+  String toString() => '$runtimeType(used: $used, total: $total)';
 
   @override
   bool operator ==(Object other) {
@@ -203,7 +203,7 @@ class LxdGpuCard {
 
   @override
   String toString() =>
-      'LxdGpuCard(driver: $driver, driverVersion: $driverVersion, vendor: $vendor, vendorId: $vendorId)';
+      '$runtimeType(driver: $driver, driverVersion: $driverVersion, vendor: $vendor, vendorId: $vendorId)';
 
   @override
   bool operator ==(Object other) {
@@ -234,7 +234,7 @@ class LxdNetworkCard {
 
   @override
   String toString() =>
-      'LxdNetworkCard(driver: $driver, driverVersion: $driverVersion, vendor: $vendor, vendorId: $vendorId)';
+      '$runtimeType(driver: $driver, driverVersion: $driverVersion, vendor: $vendor, vendorId: $vendorId)';
 
   @override
   bool operator ==(Object other) {
@@ -267,7 +267,7 @@ class LxdStorageDisk {
 
   @override
   String toString() =>
-      'LxdStorageDisk(id: $id, model: $model, serial: $serial, size: $size, type: $type)';
+      '$runtimeType(id: $id, model: $model, serial: $serial, size: $size, type: $type)';
 
   @override
   bool operator ==(Object other) {
@@ -305,7 +305,7 @@ class LxdUsbDevice {
 
   @override
   String toString() =>
-      'LxdUsbDevice(busAddress: $busAddress, deviceAddress: $deviceAddress, product: $product, productId: $productId, speed: $speed, vendor: $vendor, vendorId: $vendorId)';
+      '$runtimeType(busAddress: $busAddress, deviceAddress: $deviceAddress, product: $product, productId: $productId, speed: $speed, vendor: $vendor, vendorId: $vendorId)';
 
   @override
   bool operator ==(Object other) {
@@ -355,7 +355,7 @@ class LxdPciDevice {
 
   @override
   String toString() =>
-      'LxdPciDevice(driver: $driver, driverVersion: $driverVersion, pciAddress: $pciAddress, product: $product, productId: $productId, vendor: $vendor, vendorId: $vendorId)';
+      '$runtimeType(driver: $driver, driverVersion: $driverVersion, pciAddress: $pciAddress, product: $product, productId: $productId, vendor: $vendor, vendorId: $vendorId)';
 
   @override
   bool operator ==(Object other) {
@@ -395,7 +395,7 @@ class LxdFirmware {
 
   @override
   String toString() =>
-      'LxdFirmware(date: $date, vendor: $vendor, version: $version)';
+      '$runtimeType(date: $date, vendor: $vendor, version: $version)';
 
   @override
   bool operator ==(Object other) {
@@ -425,7 +425,7 @@ class LxdChassis {
 
   @override
   String toString() =>
-      'LxdChassis(serial: $serial, type: $type, vendor: $vendor, version: $version)';
+      '$runtimeType(serial: $serial, type: $type, vendor: $vendor, version: $version)';
 
   @override
   bool operator ==(Object other) {
@@ -456,7 +456,7 @@ class LxdMotherboard {
 
   @override
   String toString() =>
-      'LxdMotherboard(product: $product, serial: $serial, vendor: $vendor, version: $version)';
+      '$runtimeType(product: $product, serial: $serial, vendor: $vendor, version: $version)';
 
   @override
   bool operator ==(Object other) {
@@ -501,7 +501,7 @@ class LxdSystemResources {
 
   @override
   String toString() =>
-      'LxdSystemResources(uuid: $uuid, vendor: $vendor, product: $product, family: $family, version: $version, sku: $sku, serial: $serial, type: $type, firmware: $firmware, chassis: $chassis, motherboard: $motherboard)';
+      '$runtimeType(uuid: $uuid, vendor: $vendor, product: $product, family: $family, version: $version, sku: $sku, serial: $serial, type: $type, firmware: $firmware, chassis: $chassis, motherboard: $motherboard)';
 
   @override
   bool operator ==(Object other) {
@@ -561,7 +561,7 @@ class LxdResources {
 
   @override
   String toString() =>
-      'LxdResources(cpu: $cpu, memory: $memory, gpuCards: $gpuCards, networkCards: $networkCards, storageDisks: $storageDisks, usbDevices: $usbDevices, pciDevices: $pciDevices, system: $system)';
+      '$runtimeType(cpu: $cpu, memory: $memory, gpuCards: $gpuCards, networkCards: $networkCards, storageDisks: $storageDisks, usbDevices: $usbDevices, pciDevices: $pciDevices, system: $system)';
 
   @override
   bool operator ==(Object other) {
@@ -612,7 +612,7 @@ class LxdCertificate {
 
   @override
   String toString() =>
-      'LxdCertificate(certificate: $certificate, fingerprint: $fingerprint, name: $name, projects: $projects, restricted: $restricted, type: $type)';
+      '$runtimeType(certificate: $certificate, fingerprint: $fingerprint, name: $name, projects: $projects, restricted: $restricted, type: $type)';
 
   @override
   bool operator ==(Object other) {
@@ -673,7 +673,7 @@ class LxdInstance {
 
   @override
   String toString() =>
-      "LxdInstance(architecture: $architecture, config: $config, createdAt: $createdAt, description: '$description', ephemeral: $ephemeral, lastUsedAt: $lastUsedAt, location: $location, name: $name, profiles: $profiles, stateful: $stateful, status: $status, statusCode: $statusCode, type: $type)";
+      "$runtimeType(architecture: $architecture, config: $config, createdAt: $createdAt, description: '$description', ephemeral: $ephemeral, lastUsedAt: $lastUsedAt, location: $location, name: $name, profiles: $profiles, stateful: $stateful, status: $status, statusCode: $statusCode, type: $type)";
 
   @override
   bool operator ==(Object other) {
@@ -730,7 +730,7 @@ class LxdInstanceState {
 
   @override
   String toString() =>
-      'LxdInstanceState(network: $network, pid: $pid, status: $status, statusCode: $statusCode)';
+      '$runtimeType(network: $network, pid: $pid, status: $status, statusCode: $statusCode)';
 
   @override
   bool operator ==(Object other) {
@@ -766,7 +766,7 @@ class LxdNetwork {
 
   @override
   String toString() =>
-      "LxdNetwork(config: $config, description: '$description', managed: $managed, name: $name, status: $status, type: $type)";
+      "$runtimeType(config: $config, description: '$description', managed: $managed, name: $name, status: $status, type: $type)";
 
   @override
   bool operator ==(Object other) {
@@ -809,7 +809,7 @@ class LxdNetworkAddress {
 
   @override
   String toString() =>
-      'LxdNetworkAddress(address: $address, family: $family, netmask: $netmask, scope: $scope)';
+      '$runtimeType(address: $address, family: $family, netmask: $netmask, scope: $scope)';
 
   @override
   bool operator ==(Object other) {
@@ -840,7 +840,7 @@ class LxdNetworkCounters {
 
   @override
   String toString() =>
-      'LxdNetworkCounters(bytesReceived: $bytesReceived, bytesSent: $bytesSent, packetsReceived: $packetsReceived, packetsSent: $packetsSent)';
+      '$runtimeType(bytesReceived: $bytesReceived, bytesSent: $bytesSent, packetsReceived: $packetsReceived, packetsSent: $packetsSent)';
 
   @override
   bool operator ==(Object other) {
@@ -876,7 +876,7 @@ class LxdNetworkState {
 
   @override
   String toString() =>
-      'LxdNetworkState(addresses: $addresses, counters: $counters, hwaddr: $hwaddr, mtu: $mtu, state: $state, type: $type)';
+      '$runtimeType(addresses: $addresses, counters: $counters, hwaddr: $hwaddr, mtu: $mtu, state: $state, type: $type)';
 
   @override
   bool operator ==(Object other) {
@@ -921,7 +921,7 @@ class LxdNetworkLease {
 
   @override
   String toString() =>
-      'LxdNetworkLease(address: $address, hostname: $hostname, hwaddr: $hwaddr, location: $location, type: $type)';
+      '$runtimeType(address: $address, hostname: $hostname, hwaddr: $hwaddr, location: $location, type: $type)';
 
   @override
   bool operator ==(Object other) {
@@ -957,7 +957,7 @@ class LxdNetworkAcl {
 
   @override
   String toString() =>
-      "LxdNetworkAcl(config: $config, description: '$description', name: $name)";
+      "$runtimeType(config: $config, description: '$description', name: $name)";
 
   @override
   bool operator ==(Object other) {
@@ -984,7 +984,7 @@ class LxdProfile {
 
   @override
   String toString() =>
-      "LxdProfile(config: $config, description: '$description', name: $name)";
+      "$runtimeType(config: $config, description: '$description', name: $name)";
 
   @override
   bool operator ==(Object other) {
@@ -1011,7 +1011,7 @@ class LxdProject {
 
   @override
   String toString() =>
-      "LxdProject(config: $config, description: '$description', name: $name)";
+      "$runtimeType(config: $config, description: '$description', name: $name)";
 
   @override
   bool operator ==(Object other) {
@@ -1042,7 +1042,7 @@ class LxdStoragePool {
 
   @override
   String toString() =>
-      "LxdStoragePool(config: $config, description: '$description', name: $name, status: $status)";
+      "$runtimeType(config: $config, description: '$description', name: $name, status: $status)";
 
   @override
   bool operator ==(Object other) {
@@ -1082,7 +1082,7 @@ class LxdRemoteImage {
 
   @override
   String toString() =>
-      'LxdRemoteImage(architecture: $architecture, aliases: $aliases, description: $description, fingerprint: $fingerprint, size: $size, type: $type, url: $url)';
+      '$runtimeType(architecture: $architecture, aliases: $aliases, description: $description, fingerprint: $fingerprint, size: $size, type: $type, url: $url)';
 
   @override
   bool operator ==(Object other) {
